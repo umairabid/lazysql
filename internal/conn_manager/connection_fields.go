@@ -7,7 +7,7 @@ import (
 
 func createTextInput() textinput.Model {
 	ti := textinput.New()
-	ti.CursorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	ti.Cursor.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	ti.CharLimit = 256
 	return ti
 }
