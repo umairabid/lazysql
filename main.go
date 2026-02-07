@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"app.lazygit/internal/client"
 )
 

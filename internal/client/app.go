@@ -15,7 +15,7 @@ type AppModel struct {
 }
 
 func StartApp() {
-	p := tea.NewProgram(initModel())
+	p := tea.NewProgram(initModel(), tea.WithAltScreen())
 	if err := p.Start(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 	}
