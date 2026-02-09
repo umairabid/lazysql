@@ -4,98 +4,57 @@ import (
 	"fmt"
 
 	"app.lazygit/internal/utils"
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type ConnectionManager struct {
-	width      int
-	height     int
-	inputs     []textinput.Model
-	focusIndex int
+	width  int
+	height int
+	list   tea.Model
+	form   tea.Model
 }
 
-func InitConnManager() ConnectionManager {
-	hostInput := createHostInput()
-	hostInput.Focus()
-
-	inputs := []textinput.Model{hostInput, createPortInput(), createUserInput(), createPasswordInput()}
-	return ConnectionManager{inputs: inputs[:], width: 80, height: 24, focusIndex: 0}
+func InitConnectionManager() ConnectionManager {
+	return ConnectionManager{
+		width:  80,
+		height: 24,
+		list:   InitConnectionList(),
+		form:   InitConnForm(),
+	}
 }
 
 func (m ConnectionManager) Init() tea.Cmd {
-	return nil
+	return tea.Batch(m.list.Init(), m.form.Init())
 }
 
 func (m ConnectionManager) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var listCmd, formCmd tea.Cmd
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "tab", "shift+tab":
-			s := msg.String()
-			m.focusIndex = m.changeFocusIndex(s)
-			cmds := m.changeFocusedInput()
-			return m, tea.Batch(cmds...)
-		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
 	}
-	cmd := m.updateInputs(msg)
+
+	m.list, listCmd = m.list.Update(msg)
+	m.form, formCmd = m.form.Update(msg)
+	cmd := tea.Batch(listCmd, formCmd)
 	return m, cmd
 }
 
 func (m ConnectionManager) View() string {
-	view := fmt.Sprintf("Connection Manager\n\n%s\n\nPress q to quit.", m.renderInputs())
-
-	container := utils.BorderedContainer().Width(m.width / 2).Height(m.height / 2).Render(view)
-	return lipgloss.Place(m.width, m.height,
-		lipgloss.Center, lipgloss.Center,
-		container,
+	width := m.width / 3
+	height := m.height / 3
+	header := utils.BottomBorder().Width(width).Padding(1).Render("Connection Manager")
+	footer := utils.TopBorder().Width(width).Padding(1).Render("Press 'q' to quit")
+	bodyHeight := height - (lipgloss.Height(header) + lipgloss.Height(footer))
+	listView := utils.RightBorder().Width(width / 2).Height(bodyHeight).Render(m.list.View())
+	formView := lipgloss.NewStyle().Width(width / 2).Height(bodyHeight).Padding(1, 2).Render(m.form.View())
+	listAndFormView := lipgloss.JoinHorizontal(lipgloss.Top, listView, formView)
+	body := lipgloss.NewStyle().Height(bodyHeight - 3).Render(listAndFormView)
+	container := utils.Border().Width(width).Height(height).Render(
+		fmt.Sprintf("%s\n%s\n%s", header, body, footer),
 	)
-}
 
-func (m ConnectionManager) changeFocusIndex(key string) int {
-	if key == "tab" {
-		return (m.focusIndex + 1) % 4
-	} else if key == "shift+tab" {
-		return (m.focusIndex - 1 + 4) % 4
-	}
-	return m.focusIndex
-}
-
-func (m ConnectionManager) changeFocusedInput() []tea.Cmd {
-	var cmds []tea.Cmd
-	for i := range m.inputs {
-		if i == m.focusIndex {
-			cmds = append(cmds, m.inputs[i].Focus())
-		} else {
-			m.inputs[i].Blur()
-		}
-	}
-	return cmds
-}
-
-func (m ConnectionManager) updateInputs(msg tea.Msg) tea.Cmd {
-	cmds := make([]tea.Cmd, len(m.inputs))
-
-	for i := range m.inputs {
-		m.inputs[i], cmds[i] = m.inputs[i].Update(msg)
-	}
-
-	return tea.Batch(cmds...)
-}
-
-func (m ConnectionManager) renderInputs() string {
-	var result string
-	for i, input := range m.inputs {
-		if i == m.focusIndex {
-			result += utils.FocusedTextInputStyle().Render(input.View())
-		} else {
-			result += utils.TextInputStyle().Render(input.View())
-		}
-		result += "\n"
-	}
-	return result
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, container)
 }

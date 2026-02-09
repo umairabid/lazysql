@@ -2,12 +2,10 @@ package conn_manager
 
 import (
 	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/lipgloss"
 )
 
 func createTextInput() textinput.Model {
 	ti := textinput.New()
-	ti.Cursor.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	ti.CharLimit = 256
 	return ti
 }

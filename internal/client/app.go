@@ -40,7 +40,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.checking_connection = false
 		m.has_connection = msg
 		if m.has_connection {
-			m.current_view = conn_manager.InitConnManager()
+			m.current_view = conn_manager.InitConnectionManager()
 			m.current_view.Init()
 		}
 		return m, nil
