@@ -58,13 +58,16 @@ func (m ConnectionManager) View() string {
 	heights := []int{MIN_HEIGHT, m.height / 3}
 	width := slices.Max(widths)
 	height := slices.Max(heights)
+
 	header := utils.BottomBorder().Width(width).Padding(1).Render("Connection Manager")
 	footer := utils.TopBorder().Width(width).Padding(1).Render("Press 'q' to quit")
 	bodyHeight := height - (lipgloss.Height(header) + lipgloss.Height(footer))
+
 	listView := utils.RightBorder().Width(width / 2).Height(bodyHeight).Render(m.list.View())
 	formView := lipgloss.NewStyle().Width(width/2).Height(bodyHeight).Padding(1, 2).Render(m.form.View())
 	listAndFormView := lipgloss.JoinHorizontal(lipgloss.Top, listView, formView)
 	body := lipgloss.NewStyle().Height(bodyHeight - 3).Render(listAndFormView)
+
 	container := utils.Border().Width(width).Height(height).Render(
 		fmt.Sprintf("%s\n%s\n%s", header, body, footer),
 	)
