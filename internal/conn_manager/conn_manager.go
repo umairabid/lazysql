@@ -40,8 +40,13 @@ func (m ConnectionManager) Init() tea.Cmd {
 }
 
 func (m ConnectionManager) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var listCmd, formCmd tea.Cmd
+	var listCmd, formCmd, command tea.Cmd
 	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "enter":
+			command = m.establishConnection()
+		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -49,7 +54,7 @@ func (m ConnectionManager) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.list, listCmd = m.list.Update(msg)
 	m.form, formCmd = m.form.Update(msg)
-	cmd := tea.Batch(listCmd, formCmd)
+	cmd := tea.Batch(listCmd, formCmd, command)
 	return m, cmd
 }
 
@@ -73,4 +78,24 @@ func (m ConnectionManager) View() string {
 	)
 
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, container)
+}
+
+func (m ConnectionManager) establishConnection() tea.Cmd {
+	form := m.form.(ConnectionForm)
+	connection := Connection{
+		host:     form.inputs[0].Value(),
+		port:     form.inputs[1].Value(),
+		username: form.inputs[2].Value(),
+		password: form.inputs[3].Value(),
+		driver:   "pgx",
+	}
+	return func() tea.Msg {
+		db, err := connectWithDatabase(connection)
+		if err != nil {
+			return fmt.Sprintf("Failed to connect: %s", err)
+		}
+		defer db.Close()
+		return "Connection established successfully!"
+	}
+
 }
