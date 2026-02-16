@@ -11,11 +11,28 @@ import (
 	"golang.org/x/term"
 )
 
+var MIN_WIDTH = 80
+var MIN_HEIGHT = 24
+
 type ConnectionManager struct {
 	width  int
 	height int
 	list   tea.Model
 	form   tea.Model
+	connections []Connection
+	selectedConnection int
+}
+
+type SelectedConnection Connection
+
+func initializeNewConnection() Connection {
+	return Connection{
+		name: "New Connection",
+		host: "localhost",
+		port: "5432",
+		username: "user",
+		password: "password",
+	}
 }
 
 func InitConnectionManager() ConnectionManager {
@@ -24,16 +41,17 @@ func InitConnectionManager() ConnectionManager {
 		width = 80
 		height = 24
 	}
+	connections := []Connection{ initializeNewConnection(), initializeNewConnection(), initializeNewConnection() }
+	selectedConnection := connection[0]
 	return ConnectionManager{
 		width:  width,
 		height: height,
-		list:   InitConnectionList(),
-		form:   InitConnForm(),
+		list:   InitConnectionList(connections, selectedConnection),
+		form:   InitConnForm(connections[0]),
+		connections: connections,
+		selectedConnection: selectedConnection,
 	}
 }
-
-var MIN_WIDTH = 80
-var MIN_HEIGHT = 24
 
 func (m ConnectionManager) Init() tea.Cmd {
 	return tea.Batch(m.list.Init(), m.form.Init())
@@ -90,11 +108,10 @@ func (m ConnectionManager) establishConnection() tea.Cmd {
 		driver:   "pgx",
 	}
 	return func() tea.Msg {
-		db, err := connectWithDatabase(connection)
+		_, err := connectWithDatabase(connection)
 		if err != nil {
 			return fmt.Sprintf("Failed to connect: %s", err)
 		}
-		defer db.Close()
 		return "Connection established successfully!"
 	}
 

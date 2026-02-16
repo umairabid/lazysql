@@ -11,11 +11,8 @@ type ConnectionForm struct {
 	focusIndex int
 }
 
-func InitConnForm() ConnectionForm {
-	hostInput := createHostInput()
-	hostInput.Focus()
-
-	inputs := []textinput.Model{hostInput, createPortInput(), createUserInput(), createPasswordInput()}
+func InitConnForm(connection Connection) ConnectionForm {
+	inputs := []textinput.Model{createHostInput(), createPortInput(), createUserInput(), createPasswordInput()}
 	return ConnectionForm{inputs: inputs[:], focusIndex: 0}
 }
 

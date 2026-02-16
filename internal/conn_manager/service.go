@@ -8,6 +8,7 @@ import (
 )
 
 type Connection struct {
+	name	 string
 	host     string
 	port     string
 	username string
