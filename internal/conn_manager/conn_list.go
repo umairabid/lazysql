@@ -10,14 +10,8 @@ type ConnectionList struct {
 	selectedConnection int
 }
 
-func InitConnectionList(connections []Connection, selectedConnection int) ConnectionList {
-	return ConnectionList{connections: connections, selectedConnection: selectedConnection}
-}
-
-func changeSelectedConnection(index int) tea.Cmd {
-	return func() tea.Msg {
-		return SelectedConnectionMsg(index)
-	}
+func InitConnectionList(connections []Connection) ConnectionList {
+	return ConnectionList{connections: connections, selectedConnection: 0}
 }
 
 func (m ConnectionList) Init() tea.Cmd {
@@ -33,12 +27,12 @@ func (m ConnectionList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.selectedConnection > 0 {
 				m.selectedConnection--
 			}
-			cmd = changeSelectedConnection()
+			cmd = m.changeSelectedConnection()
 		case "down", "j":
 			if m.selectedConnection < len(m.connections)-1 {
 				m.selectedConnection++
 			}
-			cmd = changeSelectedConnection()
+			cmd = m.changeSelectedConnection()
 		}
 	}
 	return m, cmd
@@ -64,4 +58,10 @@ func (m ConnectionList) View() string {
 	}
 
 	return result
+}
+
+func (m ConnectionList) changeSelectedConnection() tea.Cmd {
+	return func() tea.Msg {
+		return SelectedConnectionMsg(m.connections[m.selectedConnection])
+	}
 }

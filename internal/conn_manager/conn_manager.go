@@ -23,12 +23,12 @@ type ConnectionManager struct {
 	selectedConnection int
 }
 
-type SelectedConnection Connection
+type SelectedConnectionMsg Connection
 
-func initializeNewConnection() Connection {
+func initializeNewConnection(host string) Connection {
 	return Connection{
 		name: "New Connection",
-		host: "localhost",
+		host: host,
 		port: "5432",
 		username: "user",
 		password: "password",
@@ -41,15 +41,14 @@ func InitConnectionManager() ConnectionManager {
 		width = 80
 		height = 24
 	}
-	connections := []Connection{ initializeNewConnection(), initializeNewConnection(), initializeNewConnection() }
-	selectedConnection := connection[0]
+	connections := []Connection{ initializeNewConnection("localhost"), initializeNewConnection("pocalhost"), initializeNewConnection("totalhost") }
+	selectedConnection := connections[0]
 	return ConnectionManager{
 		width:  width,
 		height: height,
-		list:   InitConnectionList(connections, selectedConnection),
-		form:   InitConnForm(connections[0]),
+		list:   InitConnectionList(connections),
+		form:   InitConnForm(selectedConnection),
 		connections: connections,
-		selectedConnection: selectedConnection,
 	}
 }
 

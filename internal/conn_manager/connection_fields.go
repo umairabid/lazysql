@@ -4,32 +4,33 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 )
 
-func createTextInput() textinput.Model {
+func createTextInput(value string) textinput.Model {
 	ti := textinput.New()
 	ti.CharLimit = 256
+	ti.SetValue(value)
 	return ti
 }
 
-func createHostInput() textinput.Model {
-	ti := createTextInput()
+func createHostInput(value string) textinput.Model {
+	ti := createTextInput(value)
 	ti.Placeholder = "Host"
 	return ti
 }
 
-func createPortInput() textinput.Model {
-	ti := createTextInput()
+func createPortInput(value string) textinput.Model {
+	ti := createTextInput(value)
 	ti.Placeholder = "Port"
 	return ti
 }
 
-func createUserInput() textinput.Model {
-	ti := createTextInput()
+func createUserInput(value string) textinput.Model {
+	ti := createTextInput(value)
 	ti.Placeholder = "User"
 	return ti
 }
 
-func createPasswordInput() textinput.Model {
-	ti := createTextInput()
+func createPasswordInput(value string) textinput.Model {
+	ti := createTextInput(value)
 	ti.Placeholder = "Password"
 	ti.EchoMode = textinput.EchoPassword
 	ti.EchoCharacter = '•'

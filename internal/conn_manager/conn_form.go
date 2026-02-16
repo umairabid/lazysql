@@ -12,7 +12,12 @@ type ConnectionForm struct {
 }
 
 func InitConnForm(connection Connection) ConnectionForm {
-	inputs := []textinput.Model{createHostInput(), createPortInput(), createUserInput(), createPasswordInput()}
+	inputs := []textinput.Model{
+		createHostInput(connection.host),
+		createPortInput(connection.port),
+		createUserInput(connection.username),
+		createPasswordInput(connection.password),
+	}
 	return ConnectionForm{inputs: inputs[:], focusIndex: 0}
 }
 
@@ -30,6 +35,12 @@ func (m ConnectionForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds := m.changeFocusedInput()
 			return m, tea.Batch(cmds...)
 		}
+	case SelectedConnectionMsg:
+		conn := Connection(msg)
+		m.inputs[0].SetValue(conn.host)
+		m.inputs[1].SetValue(conn.port)
+		m.inputs[2].SetValue(conn.username)
+		m.inputs[3].SetValue(conn.password)
 	}
 	cmd := m.updateInputs(msg)
 	return m, cmd
