@@ -18,7 +18,7 @@ func InitConnForm(connection Connection) ConnectionForm {
 		createUserInput(connection.username),
 		createPasswordInput(connection.password),
 	}
-	return ConnectionForm{inputs: inputs[:], focusIndex: 0}
+	return ConnectionForm{inputs: inputs[:], focusIndex: -1}
 }
 
 func (m ConnectionForm) Init() tea.Cmd {
@@ -30,10 +30,13 @@ func (m ConnectionForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "tab", "shift+tab":
-			s := msg.String()
-			m.focusIndex = m.changeFocusIndex(s)
-			cmds := m.changeFocusedInput()
-			return m, tea.Batch(cmds...)
+			if m.focusIndex != -1 {
+
+				s := msg.String()
+				m.focusIndex = m.changeFocusIndex(s)
+				cmds := m.changeFocusedInput()
+				return m, tea.Batch(cmds...)
+			}
 		}
 	case SelectedConnectionMsg:
 		conn := Connection(msg)
@@ -41,6 +44,15 @@ func (m ConnectionForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.inputs[1].SetValue(conn.port)
 		m.inputs[2].SetValue(conn.username)
 		m.inputs[3].SetValue(conn.password)
+	case EditConnectionMsg:
+		canEdit := bool(msg)
+		if canEdit {
+			m.focusIndex = 0
+		} else {
+			m.focusIndex = -1
+		}
+		cmds := m.changeFocusedInput()
+		return m, tea.Batch(cmds...)
 	}
 	cmd := m.updateInputs(msg)
 	return m, cmd

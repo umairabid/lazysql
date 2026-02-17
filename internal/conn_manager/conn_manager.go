@@ -15,21 +15,23 @@ var MIN_WIDTH = 80
 var MIN_HEIGHT = 24
 
 type ConnectionManager struct {
-	width  int
-	height int
-	list   tea.Model
-	form   tea.Model
-	connections []Connection
+	width              int
+	height             int
+	list               tea.Model
+	form               tea.Model
+	connections        []Connection
 	selectedConnection int
+	editingConnection  bool
 }
 
 type SelectedConnectionMsg Connection
+type EditConnectionMsg bool
 
 func initializeNewConnection(host string) Connection {
 	return Connection{
-		name: "New Connection",
-		host: host,
-		port: "5432",
+		name:     "New Connection",
+		host:     host,
+		port:     "5432",
 		username: "user",
 		password: "password",
 	}
@@ -41,14 +43,39 @@ func InitConnectionManager() ConnectionManager {
 		width = 80
 		height = 24
 	}
-	connections := []Connection{ initializeNewConnection("localhost"), initializeNewConnection("pocalhost"), initializeNewConnection("totalhost") }
+	connections := []Connection{initializeNewConnection("localhost"), initializeNewConnection("pocalhost"), initializeNewConnection("totalhost")}
 	selectedConnection := connections[0]
 	return ConnectionManager{
-		width:  width,
-		height: height,
-		list:   InitConnectionList(connections),
-		form:   InitConnForm(selectedConnection),
-		connections: connections,
+		width:             width,
+		height:            height,
+		list:              InitConnectionList(connections),
+		form:              InitConnForm(selectedConnection),
+		connections:       connections,
+		editingConnection: false,
+	}
+}
+
+func (m ConnectionManager) establishConnection() tea.Cmd {
+	form := m.form.(ConnectionForm)
+	connection := Connection{
+		host:     form.inputs[0].Value(),
+		port:     form.inputs[1].Value(),
+		username: form.inputs[2].Value(),
+		password: form.inputs[3].Value(),
+		driver:   "pgx",
+	}
+	return func() tea.Msg {
+		_, err := connectWithDatabase(connection)
+		if err != nil {
+			return fmt.Sprintf("Failed to connect: %s", err)
+		}
+		return "Connection established successfully!"
+	}
+}
+
+func (m ConnectionManager) toggleConnectionEdit() tea.Cmd {
+	return func() tea.Msg {
+		return EditConnectionMsg(m.editingConnection)
 	}
 }
 
@@ -63,6 +90,11 @@ func (m ConnectionManager) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			command = m.establishConnection()
+		case "e":
+			if !m.editingConnection {
+				m.editingConnection = true
+			}
+			command = m.toggleConnectionEdit()
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -82,7 +114,7 @@ func (m ConnectionManager) View() string {
 	height := slices.Max(heights)
 
 	header := utils.BottomBorder().Width(width).Padding(1).Render("Connection Manager")
-	footer := utils.TopBorder().Width(width).Padding(1).Render("Press 'q' to quit")
+	footer := buildFooter(width)
 	bodyHeight := height - (lipgloss.Height(header) + lipgloss.Height(footer))
 
 	listView := utils.RightBorder().Width(width / 2).Height(bodyHeight).Render(m.list.View())
@@ -97,21 +129,11 @@ func (m ConnectionManager) View() string {
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, container)
 }
 
-func (m ConnectionManager) establishConnection() tea.Cmd {
-	form := m.form.(ConnectionForm)
-	connection := Connection{
-		host:     form.inputs[0].Value(),
-		port:     form.inputs[1].Value(),
-		username: form.inputs[2].Value(),
-		password: form.inputs[3].Value(),
-		driver:   "pgx",
-	}
-	return func() tea.Msg {
-		_, err := connectWithDatabase(connection)
-		if err != nil {
-			return fmt.Sprintf("Failed to connect: %s", err)
-		}
-		return "Connection established successfully!"
-	}
-
+func buildFooter(width int) string {
+	return utils.TopBorder().Width(width).Padding(1).Render(fmt.Sprintf("%s, %s, %s, %s",
+		"Connect (enter)",
+		"Edit (e)",
+		"Save (s)",
+		"Navigate (j,k)",
+	))
 }
