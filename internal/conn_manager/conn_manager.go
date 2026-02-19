@@ -22,10 +22,14 @@ type ConnectionManager struct {
 	connections        []Connection
 	selectedConnection int
 	editingConnection  bool
+	connecting         bool
+	connectionError    string
 }
 
 type SelectedConnectionMsg Connection
 type EditConnectionMsg bool
+type ConnectionErrorMsg string
+type ConnectedMsg bool
 
 func initializeNewConnection(host string) Connection {
 	return Connection{
@@ -52,6 +56,8 @@ func InitConnectionManager() ConnectionManager {
 		form:              InitConnForm(selectedConnection),
 		connections:       connections,
 		editingConnection: false,
+		connecting:        false,
+		connectionError:   "",
 	}
 }
 
@@ -67,9 +73,9 @@ func (m ConnectionManager) establishConnection() tea.Cmd {
 	return func() tea.Msg {
 		_, err := connectWithDatabase(connection)
 		if err != nil {
-			return fmt.Sprintf("Failed to connect: %s", err)
+			return ConnectionErrorMsg(fmt.Sprintf("Failed to connect: %s", err))
 		}
-		return "Connection established successfully!"
+		return ConnectedMsg(true)
 	}
 }
 
@@ -89,7 +95,11 @@ func (m ConnectionManager) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-			command = m.establishConnection()
+			m.connecting = true
+			m.editingConnection = false
+			connectionCommand := m.establishConnection()
+			toggleConnectionCommand := m.toggleConnectionEdit()
+			command = tea.Batch(connectionCommand, toggleConnectionCommand)
 		case "e":
 			if !m.editingConnection {
 				m.editingConnection = true
@@ -114,7 +124,7 @@ func (m ConnectionManager) View() string {
 	height := slices.Max(heights)
 
 	header := utils.BottomBorder().Width(width).Padding(1).Render("Connection Manager")
-	footer := buildFooter(width)
+	footer := m.buildFooter()
 	bodyHeight := height - (lipgloss.Height(header) + lipgloss.Height(footer))
 
 	listView := utils.RightBorder().Width(width / 2).Height(bodyHeight).Render(m.list.View())
@@ -129,11 +139,42 @@ func (m ConnectionManager) View() string {
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, container)
 }
 
-func buildFooter(width int) string {
-	return utils.TopBorder().Width(width).Padding(1).Render(fmt.Sprintf("%s, %s, %s, %s",
+func (m ConnectionManager) buildFooter() string {
+	if m.connectionError != "" {
+		return errorFooter(m.width, m.connectionError)
+	} else if m.editingConnection {
+		return editFooter(m.width)
+	} else if m.connecting {
+		return connectingFooter(m.width)
+	} else if !m.editingConnection {
+		return normalFooter(m.width)
+	}
+	return ""
+}
+
+func editFooter(width int) string {
+	return utils.TopBorder().Width(width).Padding(1).Render(fmt.Sprintf("%s, %s, %s",
+		"Save (enter)",
+		"Cancel (esc)",
+		"Navigate (tab, shift+tab)",
+	))
+}
+
+func normalFooter(width int) string {
+	return utils.TopBorder().Width(width).Padding(1).Render(fmt.Sprintf("%s, %s, %s",
 		"Connect (enter)",
 		"Edit (e)",
-		"Save (s)",
 		"Navigate (j,k)",
 	))
+}
+
+func errorFooter(width int, errorMessage string) string {
+	return utils.TopBorder().Width(width).Padding(1).Render(fmt.Sprintf("%s\n%s",
+		errorMessage,
+		"Press e to edit",
+	))
+}
+
+func connectingFooter(width int) string {
+	return utils.TopBorder().Width(width).Padding(1).Render("Connecting...")
 }
