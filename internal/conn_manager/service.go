@@ -22,11 +22,11 @@ func (c Connection) String() string {
 
 func connectWithDatabase(connection Connection) (*sql.DB, error) {
 	err := validateConnection(connection)
+	var db *sql.DB
 	if err != nil {
 		return nil, err
 	}
 
-	var db *sql.DB
 	db, err = sql.Open(connection.driver, connection.String())
 	if err != nil {
 		return nil, err
