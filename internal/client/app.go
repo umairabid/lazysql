@@ -5,11 +5,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type ConnectionFlag bool
 type AppModel struct {
-	checking_connection bool
-	has_connection      ConnectionFlag
-	current_view        tea.Model
+	current_view tea.Model
 }
 
 func StartApp() {
@@ -18,13 +15,12 @@ func StartApp() {
 
 func initModel() AppModel {
 	return AppModel{
-		checking_connection: true,
-		current_view:        SplashModel{},
+		current_view: conn_manager.InitConnectionManager(),
 	}
 }
 
 func (m AppModel) Init() tea.Cmd {
-	return checkConnection()
+	return m.current_view.Init()
 }
 
 func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -36,24 +32,14 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		}
-	case ConnectionFlag:
-		m.checking_connection = false
-		m.has_connection = msg
-		if m.has_connection {
-			m.current_view = conn_manager.InitConnectionManager()
-			m.current_view.Init()
-		}
-		return m, nil
+	case conn_manager.ConnectedMsg:
+		m.current_view = InitConnectionContainer()
+		cmd = m.current_view.Init()
 	}
+
 	return m, cmd
 }
 
 func (m AppModel) View() string {
 	return m.current_view.View()
-}
-
-func checkConnection() tea.Cmd {
-	return func() tea.Msg {
-		return ConnectionFlag(true)
-	}
 }

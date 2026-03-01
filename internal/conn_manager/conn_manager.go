@@ -114,8 +114,6 @@ func (m ConnectionManager) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ConnectionErrorMsg:
 		m.connectionError = string(msg)
 		m.connecting = false
-	case ConnectedMsg:
-		m.connecting = false
 	}
 
 	m.list, listCmd = m.list.Update(msg)
