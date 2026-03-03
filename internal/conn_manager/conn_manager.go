@@ -44,8 +44,8 @@ func initializeNewConnection(host string) Connection {
 func InitConnectionManager() ConnectionManager {
 	width, height, err := term.GetSize(int(os.Stdin.Fd()))
 	if err != nil {
-		width = 80
-		height = 24
+		width = MIN_WIDTH
+		height = MIN_HEIGHT
 	}
 	connections := []Connection{initializeNewConnection("localhost"), initializeNewConnection("pocalhost"), initializeNewConnection("totalhost")}
 	selectedConnection := connections[0]

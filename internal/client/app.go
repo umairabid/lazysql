@@ -15,7 +15,7 @@ func StartApp() {
 
 func initModel() AppModel {
 	return AppModel{
-		current_view: conn_manager.InitConnectionManager(),
+		current_view: InitConnectionContainer(),
 	}
 }
 
