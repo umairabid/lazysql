@@ -4,6 +4,7 @@ import (
 	"app.lazygit/internal/utils"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	postgres "app.lazygit/internal/services/postgres"
 )
 
 type ConnectionForm struct {
@@ -11,12 +12,12 @@ type ConnectionForm struct {
 	focusIndex int
 }
 
-func InitConnForm(connection Connection) ConnectionForm {
+func InitConnForm(connection postgres.Connection) ConnectionForm {
 	inputs := []textinput.Model{
-		createHostInput(connection.host),
-		createPortInput(connection.port),
-		createUserInput(connection.username),
-		createPasswordInput(connection.password),
+		createHostInput(connection.Host),
+		createPortInput(connection.Port),
+		createUserInput(connection.Username),
+		createPasswordInput(connection.Password),
 	}
 	return ConnectionForm{inputs: inputs[:], focusIndex: -1}
 }
@@ -39,11 +40,11 @@ func (m ConnectionForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case SelectedConnectionMsg:
-		conn := Connection(msg)
-		m.inputs[0].SetValue(conn.host)
-		m.inputs[1].SetValue(conn.port)
-		m.inputs[2].SetValue(conn.username)
-		m.inputs[3].SetValue(conn.password)
+		conn := postgres.Connection(msg)
+		m.inputs[0].SetValue(conn.Host)
+		m.inputs[1].SetValue(conn.Port)
+		m.inputs[2].SetValue(conn.Username)
+		m.inputs[3].SetValue(conn.Password)
 	case EditConnectionMsg:
 		canEdit := bool(msg)
 		if canEdit {

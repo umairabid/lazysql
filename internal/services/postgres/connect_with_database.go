@@ -8,26 +8,26 @@ import (
 )
 
 type Connection struct {
-	name	 string
-	host     string
-	port     string
-	username string
-	password string
-	driver   string
+	Name     string
+	Host     string
+	Port     string
+	Username string
+	Password string
+	Driver   string
 }
 
 func (c Connection) String() string {
-	return fmt.Sprintf("user=%s password=%s host=%s port=%s", c.username, c.password, c.host, c.port)
+	return fmt.Sprintf("user=%s password=%s host=%s port=%s", c.Username, c.Password, c.Host, c.Port)
 }
 
-func connectWithDatabase(connection Connection) (*sql.DB, error) {
+func ConnectWithDatabase(connection Connection) (*sql.DB, error) {
 	err := validateConnection(connection)
 	var db *sql.DB
 	if err != nil {
 		return nil, err
 	}
 
-	db, err = sql.Open(connection.driver, connection.String())
+	db, err = sql.Open(connection.Driver, connection.String())
 	if err != nil {
 		return nil, err
 	}
@@ -42,19 +42,19 @@ func connectWithDatabase(connection Connection) (*sql.DB, error) {
 
 func validateConnection(connection Connection) error {
 	var errorMessage string
-	if connection.host == "" {
+	if connection.Host == "" {
 		errorMessage += "Host is required. "
 	}
-	if connection.port == "" {
+	if connection.Port == "" {
 		errorMessage += "Port is required. "
 	}
-	if connection.username == "" {
+	if connection.Username == "" {
 		errorMessage += "Username is required. "
 	}
-	if connection.password == "" {
+	if connection.Password == "" {
 		errorMessage += "Password is required. "
 	}
-	if connection.driver == "" {
+	if connection.Driver == "" {
 		errorMessage += "Driver is required. "
 	}
 	if errorMessage != "" {

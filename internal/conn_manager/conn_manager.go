@@ -6,9 +6,11 @@ import (
 	"slices"
 
 	"app.lazygit/internal/utils"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/term"
+	
+	tea "github.com/charmbracelet/bubbletea"
+	postgres "app.lazygit/internal/services/postgres"
 )
 
 var MIN_WIDTH = 80
@@ -19,25 +21,25 @@ type ConnectionManager struct {
 	height             int
 	list               tea.Model
 	form               tea.Model
-	connections        []Connection
+	connections        []postgres.Connection
 	selectedConnection int
 	editingConnection  bool
 	connecting         bool
 	connectionError    string
 }
 
-type SelectedConnectionMsg Connection
+type SelectedConnectionMsg postgres.Connection
 type EditConnectionMsg bool
 type ConnectionErrorMsg string
 type ConnectedMsg bool
 
-func initializeNewConnection(host string) Connection {
-	return Connection{
-		name:     "New Connection",
-		host:     host,
-		port:     "5432",
-		username: "user",
-		password: "password",
+func initializeNewConnection(host string) postgres.Connection {
+	return postgres.Connection{
+		Name:     "New Connection",
+		Host:     host,
+		Port:     "5432",
+		Username: "user",
+		Password: "password",
 	}
 }
 
@@ -47,7 +49,7 @@ func InitConnectionManager() ConnectionManager {
 		width = MIN_WIDTH
 		height = MIN_HEIGHT
 	}
-	connections := []Connection{initializeNewConnection("localhost"), initializeNewConnection("pocalhost"), initializeNewConnection("totalhost")}
+	connections := []postgres.Connection{initializeNewConnection("localhost"), initializeNewConnection("pocalhost"), initializeNewConnection("totalhost")}
 	selectedConnection := connections[0]
 	return ConnectionManager{
 		width:             width,
@@ -63,15 +65,15 @@ func InitConnectionManager() ConnectionManager {
 
 func (m ConnectionManager) establishConnection() tea.Cmd {
 	form := m.form.(ConnectionForm)
-	connection := Connection{
-		host:     form.inputs[0].Value(),
-		port:     form.inputs[1].Value(),
-		username: form.inputs[2].Value(),
-		password: form.inputs[3].Value(),
-		driver:   "pgx",
+	connection := postgres.Connection{
+		Host:     form.inputs[0].Value(),
+		Port:     form.inputs[1].Value(),
+		Username: form.inputs[2].Value(),
+		Password: form.inputs[3].Value(),
+		Driver:   "pgx",
 	}
 	return func() tea.Msg {
-		_, err := connectWithDatabase(connection)
+		_, err := postgres.ConnectWithDatabase(connection)
 		if err != nil {
 			return ConnectionErrorMsg(fmt.Sprintf("Failed to connect: %s", err))
 		}

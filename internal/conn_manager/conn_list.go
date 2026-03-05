@@ -2,15 +2,16 @@ package conn_manager
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	postgres "app.lazygit/internal/services/postgres"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type ConnectionList struct {
-	connections        []Connection
+	connections        []postgres.Connection
 	selectedConnection int
 }
 
-func InitConnectionList(connections []Connection) ConnectionList {
+func InitConnectionList(connections []postgres.Connection) ConnectionList {
 	return ConnectionList{connections: connections, selectedConnection: 0}
 }
 
@@ -51,9 +52,9 @@ func (m ConnectionList) View() string {
 
 	for i, conn := range m.connections {
 		if i == m.selectedConnection {
-			result += selectedStyle.Render(conn.name) + "\n"
+			result += selectedStyle.Render(conn.Name) + "\n"
 		} else {
-			result += normalStyle.Render(conn.name) + "\n"
+			result += normalStyle.Render(conn.Name) + "\n"
 		}
 	}
 
