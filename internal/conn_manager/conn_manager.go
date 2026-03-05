@@ -38,8 +38,8 @@ func initializeNewConnection(host string) postgres.Connection {
 		Name:     "New Connection",
 		Host:     host,
 		Port:     "5432",
-		Username: "user",
-		Password: "password",
+		Username: "postgres",
+		Password: "postgres",
 	}
 }
 

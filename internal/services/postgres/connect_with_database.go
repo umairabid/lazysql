@@ -31,6 +31,7 @@ func ConnectWithDatabase(connection Connection) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var greeting string
 	err = db.QueryRow("select 'Hello, world!'").Scan(&greeting)
 	if err != nil {
