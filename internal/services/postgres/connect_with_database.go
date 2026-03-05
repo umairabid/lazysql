@@ -1,4 +1,4 @@
-package conn_manager
+package postgres
 
 import (
 	"fmt"

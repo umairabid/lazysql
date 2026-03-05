@@ -52,7 +52,7 @@ func (m ConnectionContainerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ConnectionContainerModel) View() string {
-	return lipgloss.JoinHorizontal(lipgloss.Top+2,
+	return lipgloss.JoinHorizontal(lipgloss.Top,
 		m.explorerView(),
 		lipgloss.JoinVertical(lipgloss.Left,
 			m.editorView(),
@@ -62,38 +62,37 @@ func (m ConnectionContainerModel) View() string {
 }
 
 func (m ConnectionContainerModel) explorerView() string {
-	explorerWidth := m.width / 3
-	explorerHeight := m.height - 2
+	explorerWidth := (m.width / 3) - 8
+	explorerHeight := m.height - 4
 	return lipgloss.
 		NewStyle().
 		Width(explorerWidth).
 		Height(explorerHeight).
 		Border(lipgloss.RoundedBorder()).
-		Padding(1, 1).
+		Margin(1, 0, 0, 1).
 		Render(m.explorer.View())
 }
 
 func (m ConnectionContainerModel) editorView() string {
-	editorWidth := m.width - (m.width / 3) - 2
+	editorWidth := m.width - (m.width / 3) + 3
 	editorHeight := (m.height / 2) - 8
 	return lipgloss.
 		NewStyle().
 		Width(editorWidth).
 		Height(editorHeight).
 		Border(lipgloss.RoundedBorder()).
-		Padding(1, 1).
-		Margin(1, 1).
+		Margin(1, 0, 0, 0).
 		Render(m.editor.View())
 }
 
 func (m ConnectionContainerModel) viewerView() string {
-	viewerWidth := m.width - (m.width / 3) - 2
-	viewerHeight := m.height / 2
+	viewerWidth := m.width - (m.width / 3) + 3
+	viewerHeight := (m.height / 2) + 3
 	return lipgloss.
 		NewStyle().
 		Width(viewerWidth).
 		Height(viewerHeight).
 		Border(lipgloss.RoundedBorder()).
-		Padding(1, 1).
+		Margin(0, 0, 1, 0).
 		Render(m.viewer.View())
 }
