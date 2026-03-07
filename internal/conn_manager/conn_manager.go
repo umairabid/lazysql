@@ -10,7 +10,7 @@ import (
 	"golang.org/x/term"
 	
 	tea "github.com/charmbracelet/bubbletea"
-	postgres "app.lazygit/internal/services/postgres"
+	adapters "app.lazygit/internal/adapters"
 )
 
 var MIN_WIDTH = 80
@@ -21,20 +21,20 @@ type ConnectionManager struct {
 	height             int
 	list               tea.Model
 	form               tea.Model
-	connections        []postgres.Connection
+	connections        []adapters.DbConnection
 	selectedConnection int
 	editingConnection  bool
 	connecting         bool
 	connectionError    string
 }
 
-type SelectedConnectionMsg postgres.Connection
+type SelectedConnectionMsg adapters.DbConnection
 type EditConnectionMsg bool
 type ConnectionErrorMsg string
 type ConnectedMsg bool
 
-func initializeNewConnection(host string) postgres.Connection {
-	return postgres.Connection{
+func initializeNewConnection(host string) adapters.DbConnection {
+	return adapters.DbConnection{
 		Name:     "New Connection",
 		Host:     host,
 		Port:     "5432",
@@ -49,7 +49,7 @@ func InitConnectionManager() ConnectionManager {
 		width = MIN_WIDTH
 		height = MIN_HEIGHT
 	}
-	connections := []postgres.Connection{initializeNewConnection("localhost"), initializeNewConnection("pocalhost"), initializeNewConnection("totalhost")}
+	connections := []adapters.DbConnection{initializeNewConnection("localhost"), initializeNewConnection("pocalhost"), initializeNewConnection("totalhost")}
 	selectedConnection := connections[0]
 	return ConnectionManager{
 		width:             width,
@@ -65,7 +65,7 @@ func InitConnectionManager() ConnectionManager {
 
 func (m ConnectionManager) establishConnection() tea.Cmd {
 	form := m.form.(ConnectionForm)
-	connection := postgres.Connection{
+	connection := adapters.DbConnection{
 		Host:     form.inputs[0].Value(),
 		Port:     form.inputs[1].Value(),
 		Username: form.inputs[2].Value(),
@@ -73,7 +73,7 @@ func (m ConnectionManager) establishConnection() tea.Cmd {
 		Driver:   "pgx",
 	}
 	return func() tea.Msg {
-		_, err := postgres.ConnectWithDatabase(connection)
+		_, err := connection.ConnectWithDatabase()
 		if err != nil {
 			return ConnectionErrorMsg(fmt.Sprintf("Failed to connect: %s", err))
 		}

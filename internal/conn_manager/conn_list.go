@@ -1,17 +1,17 @@
 package conn_manager
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
-	postgres "app.lazygit/internal/services/postgres"
 	"github.com/charmbracelet/lipgloss"
+	tea "github.com/charmbracelet/bubbletea"
+	adapters "app.lazygit/internal/adapters"
 )
 
 type ConnectionList struct {
-	connections        []postgres.Connection
+	connections        []adapters.DbConnection
 	selectedConnection int
 }
 
-func InitConnectionList(connections []postgres.Connection) ConnectionList {
+func InitConnectionList(connections []adapters.DbConnection) ConnectionList {
 	return ConnectionList{connections: connections, selectedConnection: 0}
 }
 

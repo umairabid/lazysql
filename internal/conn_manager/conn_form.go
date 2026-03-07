@@ -3,8 +3,8 @@ package conn_manager
 import (
 	"app.lazygit/internal/utils"
 	"github.com/charmbracelet/bubbles/textinput"
+	adapters "app.lazygit/internal/adapters"
 	tea "github.com/charmbracelet/bubbletea"
-	postgres "app.lazygit/internal/services/postgres"
 )
 
 type ConnectionForm struct {
@@ -12,7 +12,7 @@ type ConnectionForm struct {
 	focusIndex int
 }
 
-func InitConnForm(connection postgres.Connection) ConnectionForm {
+func InitConnForm(connection adapters.DbConnection) ConnectionForm {
 	inputs := []textinput.Model{
 		createHostInput(connection.Host),
 		createPortInput(connection.Port),
@@ -40,7 +40,7 @@ func (m ConnectionForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case SelectedConnectionMsg:
-		conn := postgres.Connection(msg)
+		conn := adapters.DbConnection(msg)
 		m.inputs[0].SetValue(conn.Host)
 		m.inputs[1].SetValue(conn.Port)
 		m.inputs[2].SetValue(conn.Username)

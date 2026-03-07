@@ -1,4 +1,4 @@
-package postgres
+package adapters
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-type Connection struct {
+type DbConnection struct {
 	Name     string
 	Host     string
 	Port     string
@@ -16,18 +16,22 @@ type Connection struct {
 	Driver   string
 }
 
-func (c Connection) String() string {
+type Database interface {
+	getTables() ([]string, error)
+}
+
+func (c DbConnection) String() string {
 	return fmt.Sprintf("user=%s password=%s host=%s port=%s", c.Username, c.Password, c.Host, c.Port)
 }
 
-func ConnectWithDatabase(connection Connection) (*sql.DB, error) {
-	err := validateConnection(connection)
+func (c DbConnection) ConnectWithDatabase() (Database, error) {
+	err := c.validateConnection()
 	var db *sql.DB
 	if err != nil {
 		return nil, err
 	}
 
-	db, err = sql.Open(connection.Driver, connection.String())
+	db, err = sql.Open(c.Driver, c.String())
 	if err != nil {
 		return nil, err
 	}
@@ -38,28 +42,31 @@ func ConnectWithDatabase(connection Connection) (*sql.DB, error) {
 		return nil, err
 	}
 	defer db.Close()
-	return db, nil
+	if c.Driver == "pgx" {
+		return InitPostgres(db), nil
+	}
+	return nil, fmt.Errorf("unsupported driver: %s", c.Driver)
 }
 
-func validateConnection(connection Connection) error {
+func (c DbConnection) validateConnection() error {
 	var errorMessage string
-	if connection.Host == "" {
+	if c.Host == "" {
 		errorMessage += "Host is required. "
 	}
-	if connection.Port == "" {
+	if c.Port == "" {
 		errorMessage += "Port is required. "
 	}
-	if connection.Username == "" {
+	if c.Username == "" {
 		errorMessage += "Username is required. "
 	}
-	if connection.Password == "" {
+	if c.Password == "" {
 		errorMessage += "Password is required. "
 	}
-	if connection.Driver == "" {
+	if c.Driver == "" {
 		errorMessage += "Driver is required. "
 	}
 	if errorMessage != "" {
-		return fmt.Errorf(errorMessage)
+		return fmt.Errorf("%s", errorMessage)
 	}
 	return nil
 }
