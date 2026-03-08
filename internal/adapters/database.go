@@ -17,7 +17,8 @@ type DbConnection struct {
 }
 
 type Database interface {
-	getTables() ([]string, error)
+	GetDatabases() ([]string, error)
+	GetTables() ([]string, error)
 }
 
 func (c DbConnection) String() string {
@@ -41,7 +42,6 @@ func (c DbConnection) ConnectWithDatabase() (Database, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 	if c.Driver == "pgx" {
 		return InitPostgres(db), nil
 	}

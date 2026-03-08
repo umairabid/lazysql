@@ -31,7 +31,7 @@ type ConnectionManager struct {
 type SelectedConnectionMsg adapters.DbConnection
 type EditConnectionMsg bool
 type ConnectionErrorMsg string
-type ConnectedMsg bool
+type ConnectedMsg adapters.Database
 
 func initializeNewConnection(host string) adapters.DbConnection {
 	return adapters.DbConnection{
@@ -73,11 +73,11 @@ func (m ConnectionManager) establishConnection() tea.Cmd {
 		Driver:   "pgx",
 	}
 	return func() tea.Msg {
-		_, err := connection.ConnectWithDatabase()
+		database, err := connection.ConnectWithDatabase()
 		if err != nil {
 			return ConnectionErrorMsg(fmt.Sprintf("Failed to connect: %s", err))
 		}
-		return ConnectedMsg(true)
+		return ConnectedMsg(database)
 	}
 }
 

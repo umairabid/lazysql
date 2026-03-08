@@ -3,6 +3,7 @@ package client
 import (
 	conn_manager "app.lazygit/internal/conn_manager"
 	tea "github.com/charmbracelet/bubbletea"
+	adapters "app.lazygit/internal/adapters"
 )
 
 type AppModel struct {
@@ -33,7 +34,8 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	case conn_manager.ConnectedMsg:
-		m.current_view = InitConnectionContainer()
+		database := msg.(adapters.Database)
+		m.current_view = InitConnectionContainer(database)
 		cmd = m.current_view.Init()
 	}
 

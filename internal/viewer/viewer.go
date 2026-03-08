@@ -2,13 +2,17 @@ package viewer
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	adapters "app.lazygit/internal/adapters"
 )
 
 type ViewerModel struct {
+	database adapters.Database
 }
 
-func InitViewer() ViewerModel {
-	return ViewerModel{}
+func InitViewer(database adapters.Database) ViewerModel {
+	return ViewerModel{
+		database: database,
+	}
 }
 
 func (m ViewerModel) Init() tea.Cmd {

@@ -9,6 +9,7 @@ import (
 	viewer "app.lazygit/internal/viewer"
 	tea "github.com/charmbracelet/bubbletea"
 	lipgloss "github.com/charmbracelet/lipgloss"
+	adapters "app.lazygit/internal/adapters"
 )
 
 var MIN_WIDTH = 600
@@ -23,7 +24,7 @@ type ConnectionContainerModel struct {
 	active_view string
 }
 
-func InitConnectionContainer() ConnectionContainerModel {
+func InitConnectionContainer(database adapters.Database) ConnectionContainerModel {
 	width, height, err := term.GetSize(int(os.Stdin.Fd()))
 	if err != nil {
 		width = MIN_WIDTH
@@ -31,9 +32,9 @@ func InitConnectionContainer() ConnectionContainerModel {
 	}
 
 	return ConnectionContainerModel{
-		explorer: explorer.InitExplorer(),
-		editor:   editor.InitEditor(),
-		viewer:   viewer.InitViewer(),
+		explorer: explorer.InitExplorer(database),
+		editor:   editor.InitEditor(database),
+		viewer:   viewer.InitViewer(database),
 		width:    width,
 		height:   height,
 	}

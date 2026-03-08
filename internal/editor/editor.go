@@ -2,13 +2,17 @@ package editor
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	adapters "app.lazygit/internal/adapters"
 )
 
 type EditorModel struct {
+	database adapters.Database
 }
 
-func InitEditor() EditorModel {
-	return EditorModel{}
+func InitEditor(database adapters.Database) EditorModel {
+	return EditorModel{
+		database: database,
+	}
 }
 
 func (m EditorModel) Init() tea.Cmd {
