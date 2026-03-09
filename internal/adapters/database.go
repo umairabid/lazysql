@@ -25,7 +25,7 @@ func (c DbConnection) String() string {
 	return fmt.Sprintf("user=%s password=%s host=%s port=%s", c.Username, c.Password, c.Host, c.Port)
 }
 
-func (c DbConnection) ConnectWithDatabase() (Database, error) {
+func (c DbConnection) InitConnection() (Database, error) {
 	err := c.validateConnection()
 	var db *sql.DB
 	if err != nil {
@@ -43,8 +43,9 @@ func (c DbConnection) ConnectWithDatabase() (Database, error) {
 		return nil, err
 	}
 	if c.Driver == "pgx" {
-		return InitPostgres(db), nil
+		return InitPostgres(&c), nil
 	}
+	defer db.Close()
 	return nil, fmt.Errorf("unsupported driver: %s", c.Driver)
 }
 

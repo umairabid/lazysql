@@ -1,7 +1,6 @@
 package adapters
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -15,17 +14,16 @@ func TestPostgresGetDatabases(t *testing.T) {
 		Driver:   "pgx",
 	}
 
-  databse, err := dbConnection.ConnectWithDatabase()
-  if err != nil {
-	t.Fatalf("Failed to connect to database: %v", err)
-  }
-  postgres := databse.(Postgres)
-  rows, err := postgres.Query("SELECT * FROM pg_database;")
-  if err != nil {
-	  t.Fatalf("Failed to execute query: %v", err)
-  }
-  result, err := postgres.InpsectRows(rows)
-  fmt.Println(err)
-  fmt.Println(result)
-
+	databse, err := dbConnection.InitConnection()
+	if err != nil {
+		t.Fatalf("Failed to connect to database: %v", err)
+	}
+	postgres := databse.(Postgres)
+	result, err := postgres.GetDatabases()
+	if err != nil {
+		t.Fatalf("Failed to get databases: %v", err)
+	}
+	if len(result) == 0 {
+		t.Fatalf("Expected at least one database, got 0")
+	}
 }

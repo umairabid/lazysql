@@ -1,34 +1,47 @@
 package adapters
 
 import (
-	"fmt"
 	"database/sql"
+	"fmt"
 )
 
 type Postgres struct {
-	db *sql.DB
+	dbConnection *DbConnection
 }
 
-func InitPostgres(db *sql.DB) Postgres {
-	return Postgres{db: db}
+func InitPostgres(dbConnection *DbConnection) Postgres {
+	return Postgres{dbConnection: dbConnection}
 }
 
-func (p Postgres) GetDatabases() ([]string, error) {
-	rows, err := p.db.Query("SELECT datname FROM pg_database;")
+func (p Postgres) execute(query string) (*sql.Rows, error) {
+	db, err := sql.Open(p.dbConnection.Driver, p.dbConnection.String())
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	fmt.Println(rows)
-	return []string{"a"}, nil
+	defer db.Close()
+
+	return db.Query(query)
+}
+
+func (p Postgres) GetDatabases() ([]string, error) {
+	rows, err := p.execute("SELECT datname FROM pg_database WHERE NOT datistemplate;")
+	if err != nil {
+		return nil, err
+	}
+	var databases []string
+	for rows.Next() {
+		var datname string
+		if err := rows.Scan(&datname); err != nil {
+			return nil, err
+		}
+		databases = append(databases, datname)
+	}
+
+	return databases, rows.Err()
 }
 
 func (p Postgres) GetTables() ([]string, error) {
 	return []string{"a"}, nil
-}
-
-func (p Postgres) Query(query string) (*sql.Rows, error) {
-	return p.db.Query(query)
 }
 
 func (p Postgres) InpsectRows(rows *sql.Rows) ([][]string, error) {
@@ -55,7 +68,7 @@ func (p Postgres) InpsectRows(rows *sql.Rows) ([][]string, error) {
 		row := make([]string, len(columns))
 		for i, val := range vals {
 			if val == nil {
-				row[i] = "NULL"
+				row[i] = ""
 			} else {
 				row[i] = fmt.Sprintf("%v", val)
 			}

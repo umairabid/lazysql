@@ -111,12 +111,12 @@ func TestConnectWithDatabase(t *testing.T) {
 			Password: "postgres",
 			Driver:   "pgx",
 		}
-		db, err := c.ConnectWithDatabase()
+		db, err := c.InitConnection()
 		if err != nil {
-			t.Fatalf("ConnectWithDatabase() unexpected error: %v", err)
+			t.Fatalf("InitConnection() unexpected error: %v", err)
 		}
 		if db == nil {
-			t.Error("ConnectWithDatabase() returned nil db")
+			t.Error("InitConnection() returned nil db")
 		}
 	})
 
@@ -128,9 +128,9 @@ func TestConnectWithDatabase(t *testing.T) {
 			Password: "wrongpassword",
 			Driver:   "pgx",
 		}
-		_, err := c.ConnectWithDatabase()
+		_, err := c.InitConnection()
 		if err == nil {
-			t.Error("ConnectWithDatabase() expected error for invalid credentials, got nil")
+			t.Error("InitConnection() expected error for invalid credentials, got nil")
 		}
 	})
 
@@ -141,9 +141,9 @@ func TestConnectWithDatabase(t *testing.T) {
 			Driver: "pgx",
 			// missing Username and Password
 		}
-		_, err := c.ConnectWithDatabase()
+		_, err := c.InitConnection()
 		if err == nil {
-			t.Error("ConnectWithDatabase() expected validation error, got nil")
+			t.Error("InitConnection() expected validation error, got nil")
 		}
 	})
 }

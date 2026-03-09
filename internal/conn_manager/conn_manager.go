@@ -73,7 +73,7 @@ func (m ConnectionManager) establishConnection() tea.Cmd {
 		Driver:   "pgx",
 	}
 	return func() tea.Msg {
-		database, err := connection.ConnectWithDatabase()
+			database, err := connection.InitConnection()
 		if err != nil {
 			return ConnectionErrorMsg(fmt.Sprintf("Failed to connect: %s", err))
 		}
