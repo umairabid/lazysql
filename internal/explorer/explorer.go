@@ -13,7 +13,7 @@ type DatabasesLoaded []ExplorerNodeModel
 type ExplorerModel struct {
 	database adapters.Database
 	databaseLoadError string
-	databaseList ExplorerNodeModel
+	databaseList tea.Model
 }
 
 func InitExplorer(database adapters.Database) ExplorerModel {
@@ -27,16 +27,14 @@ func InitExplorer(database adapters.Database) ExplorerModel {
 func (m ExplorerModel) loadDatabases() tea.Cmd {
 	return func() tea.Msg {
 		databases, err := m.database.GetDatabases()
-		fmt.Println("Loaded databases:", databases)
 		if err != nil {
 			return DatabasesLoadedError(fmt.Sprintf("Failed to load databases: %v", err))
 		}
 		var nodes []ExplorerNodeModel
 		for _, db := range databases {
-			nodes = append(nodes, ExplorerNodeModel{Title: db, Type: "database", Parent: &m.databaseList})
+			node := m.databaseList.(ExplorerNodeModel)
+			nodes = append(nodes, ExplorerNodeModel{Title: db, Type: "database", Parent: &node})
 		}
-		fmt.Println(m.databaseList)
-		fmt.Println("Created nodes:", nodes)
 		return DatabasesLoaded(nodes)
 	}
 }
@@ -46,9 +44,7 @@ func (m ExplorerModel) Init() tea.Cmd {
 }
 
 func (m ExplorerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	fmt.Println("hello there")
-	var cmd tea.Cmd
-	m.databaseList, databaseListCmd = m.databaseList.Update(msg)
+	var cmd, databaseListCmd tea.Cmd
 	switch msg := msg.(type) {
 	case DatabasesLoadedError:
 		m.databaseLoadError = string(msg)
@@ -58,12 +54,14 @@ func (m ExplorerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		for _, node := range msg {
 			nodeCmds = append(nodeCmds, node.Init())
 		}
-		nodeCmds = append(nodeCmds, m.databaseList.setNodes(msg))
+		dbList := m.databaseList.(ExplorerNodeModel)
+		nodeCmds = append(nodeCmds, dbList.setNodes(msg))
 		cmd = tea.Batch(nodeCmds...)
 	}
+	m.databaseList, databaseListCmd = m.databaseList.Update(msg)
 	return m, tea.Batch(cmd, databaseListCmd)
 }
 
 func (m ExplorerModel) View() string {
-	return fmt.Sprintf("Database Explorer\n\n%s\n\n%s", m.databaseList.View(), m.databaseList.Selected)
+	return fmt.Sprintf("%s", m.databaseList.View())
 }

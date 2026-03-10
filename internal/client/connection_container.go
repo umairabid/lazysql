@@ -16,9 +16,9 @@ var MIN_WIDTH = 600
 var MIN_HEIGHT = 400
 
 type ConnectionContainerModel struct {
-	explorer    explorer.ExplorerModel
-	editor      editor.EditorModel
-	viewer      viewer.ViewerModel
+	explorer    tea.Model
+	editor      tea.Model
+	viewer      tea.Model
 	width       int
 	height      int
 	active_view string
@@ -49,7 +49,11 @@ func (m ConnectionContainerModel) Init() tea.Cmd {
 }
 
 func (m ConnectionContainerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return m, nil
+	var explorerCmd, editorCmd, viewerCmd tea.Cmd
+	m.explorer, explorerCmd = m.explorer.Update(msg)
+	m.editor, editorCmd = m.editor.Update(msg)
+	m.viewer, viewerCmd = m.viewer.Update(msg)
+	return m, tea.Batch(explorerCmd, editorCmd, viewerCmd)
 }
 
 func (m ConnectionContainerModel) View() string {
