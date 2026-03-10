@@ -8,9 +8,9 @@ import (
 	"app.lazygit/internal/utils"
 	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/term"
-	
-	tea "github.com/charmbracelet/bubbletea"
+
 	adapters "app.lazygit/internal/adapters"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 var MIN_WIDTH = 80
@@ -73,7 +73,7 @@ func (m ConnectionManager) establishConnection() tea.Cmd {
 		Driver:   "pgx",
 	}
 	return func() tea.Msg {
-			database, err := connection.InitConnection()
+		database, err := connection.InitConnection()
 		if err != nil {
 			return ConnectionErrorMsg(fmt.Sprintf("Failed to connect: %s", err))
 		}
