@@ -2,6 +2,7 @@ package explorer
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	lipgloss "github.com/charmbracelet/lipgloss"
 )
 
 type SetChildrenMsg []ExplorerNodeModel
@@ -36,11 +37,21 @@ func (m ExplorerNodeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m ExplorerNodeModel) View() string {
 	var childrenView string
+	var symbol string
+	symbol = "+"
+	if m.Expanded {
+		symbol = "-"
+	}
 	for _, child := range m.Children {
-		childrenView += "  " + child.View() + "\n"
+		childrenView += "  " + child.View()
 	}
 	if m.Parent != nil {
-		return m.Title + "\n" + childrenView
+		text := symbol + " " + m.Title + "\n" + childrenView
+		if m.Selected {
+			return lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Render(text)
+		} else {
+			return lipgloss.NewStyle().Foreground(lipgloss.Color("240")).Render(text)
+		}
 	} else {
 		return childrenView
 	}

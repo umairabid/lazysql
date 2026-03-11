@@ -35,6 +35,7 @@ func (m ExplorerModel) loadDatabases() tea.Cmd {
 			node := m.databaseList.(ExplorerNodeModel)
 			nodes = append(nodes, ExplorerNodeModel{Title: db, Type: "database", Parent: &node})
 		}
+		nodes[0].Selected = true
 		return DatabasesLoaded(nodes)
 	}
 }
