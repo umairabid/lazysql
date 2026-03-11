@@ -8,7 +8,7 @@ import (
 )
 
 type DatabasesLoadedError string
-type DatabasesLoaded []ExplorerNodeModel
+type DatabasesLoaded []string
 
 type ExplorerModel struct {
 	database adapters.Database
@@ -20,7 +20,7 @@ func InitExplorer(database adapters.Database) ExplorerModel {
 	return ExplorerModel{
 		database: database,
 		databaseLoadError: "",
-		databaseList: ExplorerNodeModel{Title: "", Expanded: true, Type: "root", Selected: false},
+		databaseList: ExplorerNodeModel{Title: "Loading...", Type: "root", Parent: nil},
 	}
 }
 
@@ -30,18 +30,23 @@ func (m ExplorerModel) loadDatabases() tea.Cmd {
 		if err != nil {
 			return DatabasesLoadedError(fmt.Sprintf("Failed to load databases: %v", err))
 		}
-		var nodes []ExplorerNodeModel
-		for _, db := range databases {
-			node := m.databaseList.(ExplorerNodeModel)
-			nodes = append(nodes, ExplorerNodeModel{Title: db, Type: "database", Parent: &node})
-		}
-		nodes[0].Selected = true
-		return DatabasesLoaded(nodes)
+		return DatabasesLoaded(databases)
 	}
 }
 
+func (m ExplorerModel) createDatabaseList(databases []string) ExplorerNodeModel {
+		model := ExplorerNodeModel{Title: "", Type: "root", Parent: nil}
+		var nodes []ExplorerNodeModel
+		for _, db := range databases {
+			nodes = append(nodes, ExplorerNodeModel{Title: db, Type: "database", Parent: &model})
+		}
+		nodes[0].Selected = true
+		model.Children = nodes
+		return model
+}
+
 func (m ExplorerModel) Init() tea.Cmd {
-	return tea.Batch(m.loadDatabases(), m.databaseList.Init())
+	return m.loadDatabases()
 }
 
 func (m ExplorerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -51,12 +56,12 @@ func (m ExplorerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.databaseLoadError = string(msg)
 	case DatabasesLoaded:
 		m.databaseLoadError = ""
+		m.databaseList = m.createDatabaseList(msg)
 		var nodeCmds []tea.Cmd
-		for _, node := range msg {
+		for _, node := range m.databaseList.(ExplorerNodeModel).Children {
 			nodeCmds = append(nodeCmds, node.Init())
 		}
-		dbList := m.databaseList.(ExplorerNodeModel)
-		nodeCmds = append(nodeCmds, dbList.setNodes(msg))
+		nodeCmds = append(nodeCmds, m.databaseList.Init())
 		cmd = tea.Batch(nodeCmds...)
 	}
 	m.databaseList, databaseListCmd = m.databaseList.Update(msg)
