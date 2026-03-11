@@ -20,7 +20,7 @@ func InitExplorer(database adapters.Database) ExplorerModel {
 	return ExplorerModel{
 		database: database,
 		databaseLoadError: "",
-		databaseList: ExplorerNodeModel{Title: "", Expanded: true, Type: "root", Selected: true},
+		databaseList: ExplorerNodeModel{Title: "", Expanded: true, Type: "root", Selected: false},
 	}
 }
 
