@@ -37,8 +37,8 @@ func (m ExplorerModel) loadDatabases() tea.Cmd {
 func (m ExplorerModel) createDatabaseList(databases []string) ExplorerNodeModel {
 		model := ExplorerNodeModel{Title: "", Type: "root", Parent: nil}
 		var nodes []ExplorerNodeModel
-		for _, db := range databases {
-			nodes = append(nodes, ExplorerNodeModel{Title: db, Type: "database", Parent: &model})
+		for index, db := range databases {
+			nodes = append(nodes, ExplorerNodeModel{Title: db, Type: "database", Parent: &model, Index: index})
 		}
 		nodes[0].Selected = true
 		model.Children = nodes
