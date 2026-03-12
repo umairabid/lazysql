@@ -6,11 +6,12 @@ type ExplorerNode struct {
 	Expanded bool
 	Parent   *ExplorerNode
 	Type     string
-	Next	*ExplorerNode
+	Next     *ExplorerNode
+	Previous *ExplorerNode
 }
 
 type ExplorerList struct {
-	Root *ExplorerNode
+	Root     *ExplorerNode
 	Selected *ExplorerNode
 }
 
@@ -27,5 +28,12 @@ func (l *ExplorerList) Contract() {
 	l.Selected.Children = nil
 }
 
-func (l *ExplorerList) MoveDown() 
+func (l *ExplorerList) MoveDown() {
+	next := l.Selected.Next
+	l.Selected = next
+}
 
+func (l *ExplorerList) MoveUp() {
+	previous := l.Selected.Previous
+	l.Selected = previous
+}
