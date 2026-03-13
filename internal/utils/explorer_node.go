@@ -22,6 +22,24 @@ func (l *ExplorerList) Initialize() {
 
 func (l *ExplorerList) Expand(children []ExplorerNode) {
 	l.Selected.Children = children
+	l.Selected.Expanded = true
+
+	for i := range l.Selected.Children {
+		child := &l.Selected.Children[i]
+		child.Parent = l.Selected
+
+		if i == 0 {
+			child.Previous = l.Selected
+		} else {
+			child.Previous = &l.Selected.Children[i-1]
+			l.Selected.Children[i-1].Next = child
+		}
+	}
+
+	if len(children) > 0 {
+		l.Selected.Children[len(children)-1].Next = l.Selected.Next
+	}
+	l.Selected = &l.Selected.Children[0]
 }
 
 func (l *ExplorerList) Contract() {
