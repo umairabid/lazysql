@@ -7,6 +7,7 @@ import (
 	adapters "app.lazygit/internal/adapters"
 	utils "app.lazygit/internal/utils"
 	tea "github.com/charmbracelet/bubbletea"
+	lipgloss "github.com/charmbracelet/lipgloss"
 )
 
 type DatabasesLoadedError string
@@ -53,6 +54,7 @@ func (m ExplorerModel) Init() tea.Cmd {
 
 func (m ExplorerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
+	cmd = m.handleKeyboardActions(msg)
 	switch msg := msg.(type) {
 	case DatabasesLoadedError:
 		m.databaseLoadError = string(msg)
@@ -67,20 +69,62 @@ func (m ExplorerModel) View() string {
 	return m.ListNode(m.explorerList.Root, 0)
 }
 
+func (m ExplorerModel) handleKeyboardActions(msg tea.Msg) tea.Cmd {
+	var cmd tea.Cmd
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "l":
+			m.explorerList.Expand(
+				[]utils.ExplorerNode{
+					utils.ExplorerNode{Title: "users", Type: "tables"},
+					utils.ExplorerNode{Title: "accounts", Type: "tables"},
+					utils.ExplorerNode{Title: "pages", Type: "tables"},
+					utils.ExplorerNode{Title: "transactions", Type: "tables"},
+					utils.ExplorerNode{Title: "categories", Type: "tables"},
+					utils.ExplorerNode{Title: "tokens", Type: "tables"},
+				},
+			)
+		case "h":
+			m.explorerList.Contract()
+		case "j":
+			m.explorerList.MoveUp()
+		case "k":
+			m.explorerList.MoveDown()
+		}
+	}
+	return cmd
+}
+
 func (m ExplorerModel) ListNode(node *utils.ExplorerNode, indent int) string {
 	prefix := strings.Repeat("  ", indent)
 	var newIndent int
 	var result string
+	var icon string
+	var style lipgloss.Style
+
 	if node.Type == "root" {
 		result = ""
 		newIndent = indent
 	} else {
-		result = fmt.Sprintf("%s%s\n", prefix, node.Title)
+		if node.Expanded {
+			icon = "[-] "
+		} else {
+			icon = "[+] "
+		}
+
+		if m.explorerList.Selected == node {
+			style = lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Bold(true)
+		} else {
+			style = lipgloss.NewStyle()
+		}
+		title := style.Render(fmt.Sprintf("%s%s", icon, node.Title))
+		result = fmt.Sprintf("%s%s\n", prefix, title)
 		newIndent = indent + 1
 	}
 	if node.Expanded {
-		for _, child := range node.Children {
-			result += m.ListNode(&child, newIndent)
+		for i := range node.Children {
+			result += m.ListNode(&node.Children[i], newIndent)
 		}
 	}
 	return result
