@@ -2,25 +2,29 @@ package explorer
 
 import (
 	"fmt"
+	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
 	adapters "app.lazygit/internal/adapters"
+	utils "app.lazygit/internal/utils"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 type DatabasesLoadedError string
 type DatabasesLoaded []string
 
 type ExplorerModel struct {
-	database adapters.Database
+	database          adapters.Database
 	databaseLoadError string
-	databaseList tea.Model
+	explorerList      utils.ExplorerList
 }
 
 func InitExplorer(database adapters.Database) ExplorerModel {
+	list := utils.ExplorerList{}
+	list.Initialize()
 	return ExplorerModel{
-		database: database,
+		database:          database,
 		databaseLoadError: "",
-		databaseList: ExplorerNodeModel{Title: "Loading...", Type: "root", Parent: nil},
+		explorerList:      list,
 	}
 }
 
@@ -34,15 +38,13 @@ func (m ExplorerModel) loadDatabases() tea.Cmd {
 	}
 }
 
-func (m ExplorerModel) createDatabaseList(databases []string) ExplorerNodeModel {
-		model := ExplorerNodeModel{Title: "", Type: "root", Parent: nil}
-		var nodes []ExplorerNodeModel
-		for index, db := range databases {
-			nodes = append(nodes, ExplorerNodeModel{Title: db, Type: "database", Parent: &model, Index: index})
-		}
-		nodes[0].Selected = true
-		model.Children = nodes
-		return model
+func (m ExplorerModel) createDatabaseList(databases []string) utils.ExplorerList {
+	var nodes []utils.ExplorerNode
+	for _, db := range databases {
+		nodes = append(nodes, utils.ExplorerNode{Title: db, Type: "database"})
+	}
+	m.explorerList.Expand(nodes)
+	return m.explorerList
 }
 
 func (m ExplorerModel) Init() tea.Cmd {
@@ -50,24 +52,36 @@ func (m ExplorerModel) Init() tea.Cmd {
 }
 
 func (m ExplorerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd, databaseListCmd tea.Cmd
+	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case DatabasesLoadedError:
 		m.databaseLoadError = string(msg)
 	case DatabasesLoaded:
 		m.databaseLoadError = ""
-		m.databaseList = m.createDatabaseList(msg)
-		var nodeCmds []tea.Cmd
-		for _, node := range m.databaseList.(ExplorerNodeModel).Children {
-			nodeCmds = append(nodeCmds, node.Init())
-		}
-		nodeCmds = append(nodeCmds, m.databaseList.Init())
-		cmd = tea.Batch(nodeCmds...)
+		m.explorerList = m.createDatabaseList([]string(msg))
 	}
-	m.databaseList, databaseListCmd = m.databaseList.Update(msg)
-	return m, tea.Batch(cmd, databaseListCmd)
+	return m, cmd
 }
 
 func (m ExplorerModel) View() string {
-	return fmt.Sprintf("%s", m.databaseList.View())
+	return m.ListNode(m.explorerList.Root, 0)
+}
+
+func (m ExplorerModel) ListNode(node *utils.ExplorerNode, indent int) string {
+	prefix := strings.Repeat("  ", indent)
+	var newIndent int
+	var result string
+	if node.Type == "root" {
+		result = ""
+		newIndent = indent
+	} else {
+		result = fmt.Sprintf("%s%s\n", prefix, node.Title)
+		newIndent = indent + 1
+	}
+	if node.Expanded {
+		for _, child := range node.Children {
+			result += m.ListNode(&child, newIndent)
+		}
+	}
+	return result
 }

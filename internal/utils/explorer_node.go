@@ -16,7 +16,7 @@ type ExplorerList struct {
 }
 
 func (l *ExplorerList) Initialize() {
-	l.Root = &ExplorerNode{Title: "Root", Type: "root"}
+	l.Root = &ExplorerNode{Title: "Root", Type: "root", Expanded: true}
 	l.Selected = l.Root
 	l.Root.Next = l.Root
 	l.Root.Previous = l.Root
