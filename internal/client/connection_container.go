@@ -52,13 +52,30 @@ func (m ConnectionContainerModel) Init() tea.Cmd {
 func (m ConnectionContainerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var explorerCmd, editorCmd, viewerCmd tea.Cmd
 	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "shift+tab":
+			if m.active_view == "explorer" {
+				m.active_view = "editor"
+			} else if m.active_view == "editor" {
+				m.active_view = "viewer"
+			} else {
+				m.active_view = "explorer"
+			}
+		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
 	}
-	m.explorer, explorerCmd = m.explorer.Update(msg)
-	m.editor, editorCmd = m.editor.Update(msg)
-	m.viewer, viewerCmd = m.viewer.Update(msg)
+
+	if m.active_view == "explorer" {
+		m.explorer, explorerCmd = m.explorer.Update(msg)
+	} else if m.active_view == "editor" {
+		m.editor, editorCmd = m.editor.Update(msg)
+	} else if m.active_view == "viewer" {
+		m.viewer, viewerCmd = m.viewer.Update(msg)
+	}
+
 	return m, tea.Batch(explorerCmd, editorCmd, viewerCmd)
 }
 
