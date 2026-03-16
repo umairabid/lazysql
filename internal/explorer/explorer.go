@@ -54,7 +54,7 @@ func (m ExplorerModel) Init() tea.Cmd {
 
 func (m ExplorerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
-	cmd = m.handleKeyboardActions(msg)
+	m, cmd = m.handleKeyboardActions(msg)
 	switch msg := msg.(type) {
 	case DatabasesLoadedError:
 		m.databaseLoadError = string(msg)
@@ -69,7 +69,7 @@ func (m ExplorerModel) View() string {
 	return m.ListNode(m.explorerList.Root, 0)
 }
 
-func (m ExplorerModel) handleKeyboardActions(msg tea.Msg) tea.Cmd {
+func (m ExplorerModel) handleKeyboardActions(msg tea.Msg) (ExplorerModel, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -88,12 +88,12 @@ func (m ExplorerModel) handleKeyboardActions(msg tea.Msg) tea.Cmd {
 		case "h":
 			m.explorerList.Contract()
 		case "j":
-			m.explorerList.MoveUp()
-		case "k":
 			m.explorerList.MoveDown()
+		case "k":
+			m.explorerList.MoveUp()
 		}
 	}
-	return cmd
+	return m, cmd
 }
 
 func (m ExplorerModel) ListNode(node *utils.ExplorerNode, indent int) string {
