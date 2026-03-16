@@ -4,12 +4,12 @@ import (
 	"golang.org/x/term"
 	"os"
 
+	adapters "app.lazygit/internal/adapters"
 	editor "app.lazygit/internal/editor"
 	explorer "app.lazygit/internal/explorer"
 	viewer "app.lazygit/internal/viewer"
 	tea "github.com/charmbracelet/bubbletea"
 	lipgloss "github.com/charmbracelet/lipgloss"
-	adapters "app.lazygit/internal/adapters"
 )
 
 var MIN_WIDTH = 600
@@ -32,11 +32,12 @@ func InitConnectionContainer(database adapters.Database) ConnectionContainerMode
 	}
 
 	return ConnectionContainerModel{
-		explorer: explorer.InitExplorer(database),
-		editor:   editor.InitEditor(database),
-		viewer:   viewer.InitViewer(database),
-		width:    width,
-		height:   height,
+		explorer:    explorer.InitExplorer(database),
+		editor:      editor.InitEditor(database),
+		viewer:      viewer.InitViewer(database),
+		width:       width,
+		height:      height,
+		active_view: "explorer",
 	}
 }
 
@@ -50,6 +51,11 @@ func (m ConnectionContainerModel) Init() tea.Cmd {
 
 func (m ConnectionContainerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var explorerCmd, editorCmd, viewerCmd tea.Cmd
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+	}
 	m.explorer, explorerCmd = m.explorer.Update(msg)
 	m.editor, editorCmd = m.editor.Update(msg)
 	m.viewer, viewerCmd = m.viewer.Update(msg)
@@ -68,36 +74,50 @@ func (m ConnectionContainerModel) View() string {
 
 func (m ConnectionContainerModel) explorerView() string {
 	explorerWidth := (m.width / 3) - 8
-	explorerHeight := m.height - 4
-	return lipgloss.
+	explorerHeight := m.height - 8
+	style := lipgloss.
 		NewStyle().
 		Width(explorerWidth).
 		Height(explorerHeight).
 		Border(lipgloss.RoundedBorder()).
-		Margin(1, 0, 0, 1).
-		Render(m.explorer.View())
+		Margin(1, 0, 0, 1)
+
+	if m.active_view == "explorer" {
+		style = style.BorderForeground(lipgloss.Color("205"))
+	}
+
+	return style.Render(m.explorer.View())
 }
 
 func (m ConnectionContainerModel) editorView() string {
 	editorWidth := m.width - (m.width / 3) + 3
-	editorHeight := (m.height / 2) - 8
-	return lipgloss.
+	editorHeight := (m.height / 2) - 10
+	style := lipgloss.
 		NewStyle().
 		Width(editorWidth).
 		Height(editorHeight).
 		Border(lipgloss.RoundedBorder()).
-		Margin(1, 0, 0, 0).
-		Render(m.editor.View())
+		Margin(1, 0, 0, 0)
+
+	if m.active_view == "editor" {
+		style = style.BorderForeground(lipgloss.Color("205"))
+	}
+	return style.Render(m.editor.View())
 }
 
 func (m ConnectionContainerModel) viewerView() string {
 	viewerWidth := m.width - (m.width / 3) + 3
-	viewerHeight := (m.height / 2) + 3
-	return lipgloss.
+	viewerHeight := (m.height / 2)
+	style := lipgloss.
 		NewStyle().
 		Width(viewerWidth).
 		Height(viewerHeight).
 		Border(lipgloss.RoundedBorder()).
-		Margin(0, 0, 1, 0).
-		Render(m.viewer.View())
+		Margin(0, 0, 1, 0)
+
+	if m.active_view == "viewer" {
+		style = style.BorderForeground(lipgloss.Color("205"))
+	}
+
+	return style.Render(m.viewer.View())
 }
