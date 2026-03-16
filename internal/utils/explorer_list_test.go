@@ -21,7 +21,7 @@ func TestExplorerListInitialize(t *testing.T) {
 	})
 }
 
-func TestExplorerListExpand(t *testing.T) {
+func TestExplorerListExpandNonRoot(t *testing.T) {
 	list := ExplorerList{}
 	list.Initialize()
 
@@ -59,6 +59,18 @@ func TestExplorerListExpand(t *testing.T) {
 	t.Run("Should set previous of first child to selected node", func(t *testing.T) {
 		if list.Root.Children[0].Previous != list.Root {
 			t.Errorf("Expected first child Previous to be root node, got %v", list.Root.Children[0].Previous)
+		}
+	})
+
+	t.Run("Should set next of selected node to first child", func(t *testing.T) {
+		if list.Root.Next != &list.Root.Children[0] {
+			t.Errorf("Expected selected node Next to be first child, got %v", list.Root.Next)
+		}
+	})
+
+	t.Run("Should set previous of next node to last child", func(t *testing.T) {
+		if list.Root.Next.Next.Next == list.Root {
+			t.Errorf("Expected next node Previous to be root, got %v", list.Root.Next.Next.Next)
 		}
 	})
 }
@@ -128,6 +140,17 @@ func TestExplorerListCollapse(t *testing.T) {
 		list.Contract()
 		if len(list.Selected.Children) != 2 {
 			t.Fatalf("Expected root node to still have children after collapse, got %d", len(list.Selected.Children))
+		}
+	})
+
+	t.Run("Should be a no-op on non-expanded node", func(t *testing.T) {
+		list.Selected = &rootChildren[1]
+		list.Contract()
+		if list.Selected.Expanded {
+			t.Errorf("Expected non-expanded node to remain not expanded after Contract")
+		}
+		if len(list.Selected.Children) != 0 {
+			t.Errorf("Expected non-expanded node to have no children after Contract, got %d", len(list.Selected.Children))
 		}
 	})
 }
