@@ -40,8 +40,21 @@ func (p Postgres) GetDatabases() ([]string, error) {
 	return databases, rows.Err()
 }
 
-func (p Postgres) GetTables() ([]string, error) {
-	return []string{"a"}, nil
+func (p Postgres) GetTables(database string) ([]string, error) {
+	rows, err := p.execute(fmt.Sprintf("SELECT tablename FROM pg_tables WHERE schemaname = '%s';", database))
+	if err != nil {
+		return nil, err
+	}
+	var tables []string
+	for rows.Next() {
+		var tablename string
+		if err := rows.Scan(&tablename); err != nil {
+			return nil, err
+		}
+		tables = append(tables, tablename)
+	}
+
+	return tables, rows.Err()
 }
 
 func (p Postgres) InpsectRows(rows *sql.Rows) ([][]string, error) {

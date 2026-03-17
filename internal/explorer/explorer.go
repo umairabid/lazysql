@@ -10,12 +10,13 @@ import (
 	lipgloss "github.com/charmbracelet/lipgloss"
 )
 
-type DatabasesLoadedError string
+type DatabaseError string
 type DatabasesLoaded []string
+type TablesLoaded []string
 
 type ExplorerModel struct {
 	database          adapters.Database
-	databaseLoadError string
+	databaseError string
 	explorerList      utils.ExplorerList
 }
 
@@ -24,7 +25,7 @@ func InitExplorer(database adapters.Database) ExplorerModel {
 	list.Initialize()
 	return ExplorerModel{
 		database:          database,
-		databaseLoadError: "",
+		databaseError: "",
 		explorerList:      list,
 	}
 }
@@ -33,9 +34,24 @@ func (m ExplorerModel) loadDatabases() tea.Cmd {
 	return func() tea.Msg {
 		databases, err := m.database.GetDatabases()
 		if err != nil {
-			return DatabasesLoadedError(fmt.Sprintf("Failed to load databases: %v", err))
+			return DatabaseError(fmt.Sprintf("Failed to load databases: %v", err))
 		}
 		return DatabasesLoaded(databases)
+	}
+}
+
+func (m ExplorerModel) expandSelectedNode() tea.Cmd {
+	if m.explorerList.Selected.Type == "database" {
+		database := m.explorerList.Selected.Title
+		return func() tea.Msg {
+			tables, err := m.database.GetTables(database)
+			if err != nil {
+				return DatabaseError(fmt.Sprintf("Failed to load tables for database %s: %v", database, err))
+			}
+			return TablesLoaded(tables)
+		}
+	} else {
+		return nil
 	}
 }
 
@@ -56,17 +72,24 @@ func (m ExplorerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m, cmd = m.handleKeyboardActions(msg)
 	switch msg := msg.(type) {
-	case DatabasesLoadedError:
-		m.databaseLoadError = string(msg)
+	case DatabaseError:
+		m.databaseError = string(msg)
 	case DatabasesLoaded:
-		m.databaseLoadError = ""
+		m.databaseError = ""
 		m.explorerList = m.createDatabaseList([]string(msg))
+	case TablesLoaded:
+		m.databaseError = ""
+		var nodes []utils.ExplorerNode
+		for _, table := range msg {
+			nodes = append(nodes, utils.ExplorerNode{Title: table, Type: "table"})
+		}
+		m.explorerList.Expand(nodes)
 	}
 	return m, cmd
 }
 
 func (m ExplorerModel) View() string {
-	return m.ListNode(m.explorerList.Root, 0)
+	return fmt.Sprintf("%s\n%s", m.ListNode(m.explorerList.Root, 0), m.databaseError)
 }
 
 func (m ExplorerModel) handleKeyboardActions(msg tea.Msg) (ExplorerModel, tea.Cmd) {
@@ -75,16 +98,7 @@ func (m ExplorerModel) handleKeyboardActions(msg tea.Msg) (ExplorerModel, tea.Cm
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "l":
-			m.explorerList.Expand(
-				[]utils.ExplorerNode{
-					utils.ExplorerNode{Title: "users", Type: "tables"},
-					utils.ExplorerNode{Title: "accounts", Type: "tables"},
-					utils.ExplorerNode{Title: "pages", Type: "tables"},
-					utils.ExplorerNode{Title: "transactions", Type: "tables"},
-					utils.ExplorerNode{Title: "categories", Type: "tables"},
-					utils.ExplorerNode{Title: "tokens", Type: "tables"},
-				},
-			)
+			cmd = m.expandSelectedNode()
 		case "h":
 			m.explorerList.Contract()
 		case "j":

@@ -18,7 +18,7 @@ type DbConnection struct {
 
 type Database interface {
 	GetDatabases() ([]string, error)
-	GetTables() ([]string, error)
+	GetTables(string) ([]string, error)
 }
 
 func (c DbConnection) String() string {
