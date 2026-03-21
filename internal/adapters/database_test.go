@@ -11,8 +11,8 @@ func TestDbConnectionString(t *testing.T) {
 		Host:     "localhost",
 		Port:     "5432",
 	}
-	got := c.String()
-	want := "user=postgres password=secret host=localhost port=5432"
+	got := c.String("postgres")
+	want := "user=postgres password=secret host=localhost port=5432 database=postgres"
 	if got != want {
 		t.Errorf("String() = %q, want %q", got, want)
 	}

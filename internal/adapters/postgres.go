@@ -6,25 +6,36 @@ import (
 )
 
 type Postgres struct {
-	dbConnection *DbConnection
+	dbConnection    *DbConnection
+	db              *sql.DB
+	currentDatabase string
 }
 
 func InitPostgres(dbConnection *DbConnection) Postgres {
-	return Postgres{dbConnection: dbConnection}
+	return Postgres{dbConnection: dbConnection, db: nil, currentDatabase: "postgres"}
 }
 
-func (p Postgres) execute(query string) (*sql.Rows, error) {
-	db, err := sql.Open(p.dbConnection.Driver, p.dbConnection.String())
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
+func (p Postgres) execute(database string, query string, params ...any) (*sql.Rows, error) {
+	var err error
 
-	return db.Query(query)
+	if p.db != nil && p.currentDatabase != database {
+		p.db.Close()
+		p.db = nil
+	}
+
+	if p.db == nil {
+		p.db, err = sql.Open(p.dbConnection.Driver, p.dbConnection.String(database))
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return p.db.Query(query, params...)
 }
 
 func (p Postgres) GetDatabases() ([]string, error) {
-	rows, err := p.execute("SELECT datname FROM pg_database WHERE NOT datistemplate;")
+	rows, err := p.execute("postgres", "SELECT datname FROM pg_database WHERE NOT datistemplate;")
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +52,7 @@ func (p Postgres) GetDatabases() ([]string, error) {
 }
 
 func (p Postgres) GetTables(database string) ([]string, error) {
-	rows, err := p.execute(fmt.Sprintf("SELECT tablename FROM pg_tables WHERE schemaname = '%s';", database))
+	rows, err := p.execute(database, "SELECT table_name FROM information_schema.tables WHERE table_catalog = $1 AND table_schema NOT IN ('pg_catalog', 'information_schema');", database)
 	if err != nil {
 		return nil, err
 	}

@@ -21,8 +21,8 @@ type Database interface {
 	GetTables(string) ([]string, error)
 }
 
-func (c DbConnection) String() string {
-	return fmt.Sprintf("user=%s password=%s host=%s port=%s", c.Username, c.Password, c.Host, c.Port)
+func (c DbConnection) String(database string) string {
+	return fmt.Sprintf("user=%s password=%s host=%s port=%s database=%s", c.Username, c.Password, c.Host, c.Port, database)
 }
 
 func (c DbConnection) InitConnection() (Database, error) {
@@ -32,7 +32,7 @@ func (c DbConnection) InitConnection() (Database, error) {
 		return nil, err
 	}
 
-	db, err = sql.Open(c.Driver, c.String())
+	db, err = sql.Open(c.Driver, c.String("postgres"))
 	if err != nil {
 		return nil, err
 	}
