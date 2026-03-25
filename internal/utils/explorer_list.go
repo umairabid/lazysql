@@ -58,16 +58,21 @@ func (l *ExplorerList) Expand(children []ExplorerNode) {
 }
 
 func (l *ExplorerList) Contract() {
-	if !l.Selected.Expanded {
-		return
-	}
-	if l.Selected.Type == "root" {
+	if !l.Selected.Expanded || l.Selected.Type == "root" {
 		return
 	}
 	l.Selected.Next = l.Selected.Children[len(l.Selected.Children)-1].Next
 	l.Selected.Next.Previous = l.Selected
 	l.Selected.Expanded = false
 	l.Selected.Children = nil
+}
+
+func (l *ExplorerList) ContractParent() {
+	if l.Selected.Parent == nil || l.Selected.Parent.Type == "root" {
+		return
+	}
+	l.Selected = l.Selected.Parent
+	l.Contract()
 }
 
 func (l *ExplorerList) MoveDown() {
