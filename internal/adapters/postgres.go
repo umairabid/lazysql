@@ -68,6 +68,26 @@ func (p Postgres) GetTables(database string) ([]string, error) {
 	return tables, rows.Err()
 }
 
+func (p Postgres) GetTableItem(database string, table string, item string) ([][]string, error) {
+	var rows *sql.Rows
+	var err error
+	switch item {
+	case "data":
+		rows, err = p.execute(database, fmt.Sprintf("SELECT * FROM %s;", table))
+	case "schema":
+		rows, err = p.execute(database, "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = $1", table)
+	case "indexes":
+		rows, err = p.execute(database, "SELECT indexname, indexdef FROM pg_indexes WHERE tablename = $1", table)
+	default:
+		return nil, fmt.Errorf("unknown item: %s", item)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.InpsectRows(rows)
+}
+
 func (p Postgres) InpsectRows(rows *sql.Rows) ([][]string, error) {
 	if rows == nil {
 		return nil, fmt.Errorf("rows is nil")
