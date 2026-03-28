@@ -73,7 +73,6 @@ func TestPostgresGetTableItem(t *testing.T) {
 	}
 	postgres := database.(Postgres)
 
-	// Setup: create test database using a direct connection to the default postgres db
 	adminDB, err := sql.Open(dbConnection.Driver, dbConnection.String("postgres"))
 	if err != nil {
 		t.Fatalf("Failed to open admin connection: %v", err)
@@ -88,7 +87,6 @@ func TestPostgresGetTableItem(t *testing.T) {
 		adminDB.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s WITH (FORCE)", testDBName))
 	})
 
-	// Connect to the new test database and create a table with data
 	testDB, err := sql.Open(dbConnection.Driver, dbConnection.String(testDBName))
 	if err != nil {
 		t.Fatalf("Failed to connect to test database: %v", err)
@@ -113,10 +111,10 @@ func TestPostgresGetTableItem(t *testing.T) {
 
 	t.Run("data", func(t *testing.T) {
 		result, err := postgres.GetTableItem(testDBName, testTable, "data")
+		fmt.Println(result)
 		if err != nil {
 			t.Fatalf("GetTableItem(data) failed: %v", err)
 		}
-		// result[0] is the header row; result[1..] are data rows
 		if len(result) != 3 {
 			t.Fatalf("Expected 3 rows (1 header + 2 data), got %d", len(result))
 		}
@@ -130,7 +128,6 @@ func TestPostgresGetTableItem(t *testing.T) {
 		if err != nil {
 			t.Fatalf("GetTableItem(schema) failed: %v", err)
 		}
-		// result[0] is the header row (column_name, data_type); result[1..] are the table's columns
 		if len(result) != 4 {
 			t.Fatalf("Expected 4 rows (1 header + 3 columns), got %d", len(result))
 		}
@@ -145,7 +142,6 @@ func TestPostgresGetTableItem(t *testing.T) {
 		if err != nil {
 			t.Fatalf("GetTableItem(indexes) failed: %v", err)
 		}
-		// SERIAL PRIMARY KEY auto-creates an index
 		if len(result) < 2 {
 			t.Fatalf("Expected at least 2 rows (1 header + 1 index), got %d", len(result))
 		}

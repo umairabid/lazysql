@@ -60,7 +60,7 @@ func (m ExplorerModel) expandSelectedNode() tea.Cmd {
 			if err != nil {
 				return DatabaseError(fmt.Sprintf("Failed to load data for table item %s: %v", tableItem, err))
 			}
-			return TableLoaded(itemData)
+			return utils.ViewerTableData(itemData)
 		} else {
 			return nil
 		}
