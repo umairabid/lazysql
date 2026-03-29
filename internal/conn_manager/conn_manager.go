@@ -3,7 +3,6 @@ package conn_manager
 import (
 	"fmt"
 	"os"
-	"slices"
 
 	"app.lazygit/internal/utils"
 	"github.com/charmbracelet/lipgloss"
@@ -13,11 +12,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-var MIN_WIDTH = 80
-var MIN_HEIGHT = 24
-
 type ConnectionManager struct {
-	layout utils.ConnectionManagerLayout
+	layout             utils.ConnectionManagerLayout
 	list               tea.Model
 	form               tea.Model
 	connections        []adapters.DbConnection
@@ -35,7 +31,7 @@ type LayoutUpdated utils.ConnectionManagerLayout
 
 func initializeNewConnection(host string) adapters.DbConnection {
 	return adapters.DbConnection{
-		Name:     "New Connection New Connection New Connection New Connection New Connection New Connection New Connection New Connection New Connection New Connection New Connection New Connection New Connection ",
+		Name:     "New Connection",
 		Host:     host,
 		Port:     "5432",
 		Username: "postgres",
@@ -43,54 +39,64 @@ func initializeNewConnection(host string) adapters.DbConnection {
 	}
 }
 
+func calculateLayout(width int, height int) utils.ConnectionManagerLayout {
+	return utils.CalculateConnectionManagerLayout(width, height)
+}
+
+func setLayout(width int, height int) tea.Cmd {
+	return func() tea.Msg {
+		return LayoutUpdated(calculateLayout(width, height))
+	}
+}
+
 func InitConnectionManager() ConnectionManager {
+	connections := []adapters.DbConnection{
+		initializeNewConnection("localhost"),
+		initializeNewConnection("pocalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+	}
 	width, height, err := term.GetSize(int(os.Stdin.Fd()))
 	if err != nil {
-		width = MIN_WIDTH
-		height = MIN_HEIGHT
-	}
-	connections := []adapters.DbConnection{
-		initializeNewConnection("localhost"), 
-		initializeNewConnection("pocalhost"), 
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
+		width = 1 
+		height = 1
 	}
 	selectedConnection := connections[0]
-	layout := utils.CalculateConnectionManagerLayout(width, height)
+	layout := calculateLayout(width, height)
 	return ConnectionManager{
-		layout: layout,
+		layout:            layout,
 		list:              InitConnectionList(connections, layout),
 		form:              InitConnForm(selectedConnection, layout),
 		connections:       connections,
@@ -124,16 +130,6 @@ func (m ConnectionManager) toggleConnectionEdit() tea.Cmd {
 	}
 }
 
-func (m ConnectionManager) setLayout(width int, height int) tea.Cmd {
-	return func() tea.Msg {
-	widths := []int{MIN_WIDTH, width / 3}
-	heights := []int{MIN_HEIGHT, height / 3}
-	width = slices.Max(widths)
-	height = slices.Max(heights)
-	return LayoutUpdated(utils.CalculateConnectionManagerLayout(width, height))
-	}
-}
-
 func (m ConnectionManager) Init() tea.Cmd {
 	return tea.Batch(m.list.Init(), m.form.Init())
 }
@@ -158,7 +154,7 @@ func (m ConnectionManager) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case tea.WindowSizeMsg:
-		command = m.setLayout(msg.Width, msg.Height)
+		command = setLayout(msg.Width, msg.Height)
 	case ConnectionErrorMsg:
 		m.connectionError = string(msg)
 		m.connecting = false
@@ -174,7 +170,7 @@ func (m ConnectionManager) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m ConnectionManager) View() string {
 
-	header := lipgloss.NewStyle().Width(m.layout.WinWidth).Padding(1).Render("Connection Manager")
+	header := lipgloss.NewStyle().Width(m.layout.WinWidth).Height(m.layout.HeaderHeight).Padding(1).Render("Connection Manager")
 	footer := m.buildFooter()
 
 	listView := m.list.View()
@@ -190,7 +186,7 @@ func (m ConnectionManager) View() string {
 		fmt.Sprintf("%s\n%s\n%s", header, body, footer),
 	)
 
-	return lipgloss.Place(m.layout.WinWidth, m.layout.WinHeight, lipgloss.Center, lipgloss.Center, container)
+	return lipgloss.Place(m.layout.ScreenWidth, m.layout.ScreenHeight, lipgloss.Center, lipgloss.Center, container)
 }
 
 func (m ConnectionManager) buildFooter() string {
@@ -204,7 +200,7 @@ func (m ConnectionManager) buildFooter() string {
 	} else if !m.editingConnection {
 		footerContent = normalFooter()
 	}
-	return lipgloss.NewStyle().Width(m.layout.WinWidth).Padding(1).Render(fmt.Sprintf("%s", footerContent))
+	return lipgloss.NewStyle().Width(m.layout.WinWidth).Height(m.layout.FooterHeight).Padding(1).Render(fmt.Sprintf("%s", footerContent))
 }
 
 func editFooter() string {

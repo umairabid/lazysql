@@ -1,16 +1,17 @@
 package conn_manager
 
 import (
-	"github.com/charmbracelet/bubbles/textinput"
 	adapters "app.lazygit/internal/adapters"
-	tea "github.com/charmbracelet/bubbletea"
 	utils "app.lazygit/internal/utils"
+	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type ConnectionForm struct {
 	inputs     []textinput.Model
 	focusIndex int
-	layout utils.ConnectionManagerLayout
+	layout     utils.ConnectionManagerLayout
 }
 
 func InitConnForm(connection adapters.DbConnection, layout utils.ConnectionManagerLayout) ConnectionForm {
@@ -72,7 +73,10 @@ func (m ConnectionForm) View() string {
 		}
 		result += "\n"
 	}
-	return result
+	return lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, false, false, true).
+		Padding(0, 2).
+		Width(m.layout.ConnectionListWidth).Height(m.layout.BodyHeight).Render(result)
+
 }
 
 func (m ConnectionForm) changeFocusIndex(key string) int {

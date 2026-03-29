@@ -2,21 +2,27 @@ package conn_manager
 
 import (
 	adapters "app.lazygit/internal/adapters"
-	tea "github.com/charmbracelet/bubbletea"
 	utils "app.lazygit/internal/utils"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/bubbles/viewport"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type ConnectionList struct {
 	connections        []adapters.DbConnection
 	selectedConnection int
-	viewport viewport.Model
-	layout utils.ConnectionManagerLayout
+	viewport           viewport.Model
+	layout             utils.ConnectionManagerLayout
 }
 
 func InitConnectionList(connections []adapters.DbConnection, layout utils.ConnectionManagerLayout) ConnectionList {
-	return ConnectionList{connections: connections, selectedConnection: 0, layout: layout}
+	viewport := viewport.New(layout.ConnectionListWidth, layout.BodyHeight)
+	return ConnectionList{
+		connections:        connections,
+		selectedConnection: 0,
+		layout:             layout,
+		viewport:           viewport,
+	}
 }
 
 func (m ConnectionList) changeSelectedConnection() tea.Cmd {
@@ -31,6 +37,7 @@ func (m ConnectionList) Init() tea.Cmd {
 
 func (m ConnectionList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
+	var viewPortCmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -48,23 +55,20 @@ func (m ConnectionList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case LayoutUpdated:
 		m.layout = utils.ConnectionManagerLayout(msg)
 	}
-	return m, cmd
+	m.viewport, viewPortCmd = m.viewport.Update(msg)
+	return m, tea.Batch(cmd, viewPortCmd)
 }
 
 func (m ConnectionList) View() string {
 	var result string
 
 	normalStyle := lipgloss.NewStyle().
-		Padding(0, 2).
-		Width(1000).
-		Height(20)
+		Padding(0, 2)
 
 	selectedStyle := lipgloss.NewStyle().
 		Background(lipgloss.Color("57")).
 		Foreground(lipgloss.Color("229")).
-		Padding(0, 2).
-		Width(1000).
-		Height(100)
+		Padding(0, 2)
 
 	for i, conn := range m.connections {
 		if i == m.selectedConnection {
@@ -73,6 +77,6 @@ func (m ConnectionList) View() string {
 			result += normalStyle.Render(conn.Name) + "\n"
 		}
 	}
-
-	return result
+	m.viewport.SetContent(lipgloss.NewStyle().Width(m.layout.ConnectionListWidth).Height(m.layout.BodyHeight).Render(result))
+	return m.viewport.View()
 }
