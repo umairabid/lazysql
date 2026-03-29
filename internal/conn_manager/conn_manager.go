@@ -17,8 +17,7 @@ var MIN_WIDTH = 80
 var MIN_HEIGHT = 24
 
 type ConnectionManager struct {
-	width              int
-	height             int
+	layout utils.ConnectionManagerLayout
 	list               tea.Model
 	form               tea.Model
 	connections        []adapters.DbConnection
@@ -32,10 +31,11 @@ type SelectedConnectionMsg adapters.DbConnection
 type EditConnectionMsg bool
 type ConnectionErrorMsg string
 type ConnectedMsg adapters.Database
+type LayoutUpdated utils.ConnectionManagerLayout
 
 func initializeNewConnection(host string) adapters.DbConnection {
 	return adapters.DbConnection{
-		Name:     "New Connection",
+		Name:     "New Connection New Connection New Connection New Connection New Connection New Connection New Connection New Connection New Connection New Connection New Connection New Connection New Connection ",
 		Host:     host,
 		Port:     "5432",
 		Username: "postgres",
@@ -49,13 +49,50 @@ func InitConnectionManager() ConnectionManager {
 		width = MIN_WIDTH
 		height = MIN_HEIGHT
 	}
-	connections := []adapters.DbConnection{initializeNewConnection("localhost"), initializeNewConnection("pocalhost"), initializeNewConnection("totalhost")}
+	connections := []adapters.DbConnection{
+		initializeNewConnection("localhost"), 
+		initializeNewConnection("pocalhost"), 
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+		initializeNewConnection("totalhost"),
+	}
 	selectedConnection := connections[0]
+	layout := utils.CalculateConnectionManagerLayout(width, height)
 	return ConnectionManager{
-		width:             width,
-		height:            height,
-		list:              InitConnectionList(connections),
-		form:              InitConnForm(selectedConnection),
+		layout: layout,
+		list:              InitConnectionList(connections, layout),
+		form:              InitConnForm(selectedConnection, layout),
 		connections:       connections,
 		editingConnection: false,
 		connecting:        false,
@@ -87,6 +124,16 @@ func (m ConnectionManager) toggleConnectionEdit() tea.Cmd {
 	}
 }
 
+func (m ConnectionManager) setLayout(width int, height int) tea.Cmd {
+	return func() tea.Msg {
+	widths := []int{MIN_WIDTH, width / 3}
+	heights := []int{MIN_HEIGHT, height / 3}
+	width = slices.Max(widths)
+	height = slices.Max(heights)
+	return LayoutUpdated(utils.CalculateConnectionManagerLayout(width, height))
+	}
+}
+
 func (m ConnectionManager) Init() tea.Cmd {
 	return tea.Batch(m.list.Init(), m.form.Init())
 }
@@ -111,11 +158,12 @@ func (m ConnectionManager) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
+		command = m.setLayout(msg.Width, msg.Height)
 	case ConnectionErrorMsg:
 		m.connectionError = string(msg)
 		m.connecting = false
+	case LayoutUpdated:
+		m.layout = utils.ConnectionManagerLayout(msg)
 	}
 
 	m.list, listCmd = m.list.Update(msg)
@@ -125,29 +173,24 @@ func (m ConnectionManager) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ConnectionManager) View() string {
-	widths := []int{MIN_WIDTH, m.width / 3}
-	heights := []int{MIN_HEIGHT, m.height / 3}
-	width := slices.Max(widths)
-	height := slices.Max(heights)
 
-	header := lipgloss.NewStyle().Width(width).Padding(1).Render("Connection Manager")
+	header := lipgloss.NewStyle().Width(m.layout.WinWidth).Padding(1).Render("Connection Manager")
 	footer := m.buildFooter()
-	bodyHeight := height - (lipgloss.Height(header) + lipgloss.Height(footer))
 
-	listView := utils.RightBorder().Width(width / 2).Height(bodyHeight).Render(m.list.View())
-	formView := lipgloss.NewStyle().Width(width/2).Height(bodyHeight).Padding(1, 2).Render(m.form.View())
+	listView := m.list.View()
+	formView := m.form.View()
 	listAndFormView := lipgloss.JoinHorizontal(lipgloss.Top, listView, formView)
 	body := lipgloss.NewStyle().
-		Width(width).
+		Width(m.layout.WinWidth).
 		Border(lipgloss.NormalBorder(), true, false, true, false).
-		Height(bodyHeight - 3).
+		Height(m.layout.BodyHeight).
 		Render(listAndFormView)
 
-	container := utils.Border().Width(width).Height(height).Render(
+	container := utils.Border().Width(m.layout.WinWidth).Height(m.layout.WinHeight).Render(
 		fmt.Sprintf("%s\n%s\n%s", header, body, footer),
 	)
 
-	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, container)
+	return lipgloss.Place(m.layout.WinWidth, m.layout.WinHeight, lipgloss.Center, lipgloss.Center, container)
 }
 
 func (m ConnectionManager) buildFooter() string {
@@ -161,8 +204,7 @@ func (m ConnectionManager) buildFooter() string {
 	} else if !m.editingConnection {
 		footerContent = normalFooter()
 	}
-	return lipgloss.NewStyle().Width(m.width).Padding(1).Render(fmt.Sprintf("%s", footerContent))
-
+	return lipgloss.NewStyle().Width(m.layout.WinWidth).Padding(1).Render(fmt.Sprintf("%s", footerContent))
 }
 
 func editFooter() string {

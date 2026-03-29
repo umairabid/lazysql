@@ -1,25 +1,26 @@
 package conn_manager
 
 import (
-	"app.lazygit/internal/utils"
 	"github.com/charmbracelet/bubbles/textinput"
 	adapters "app.lazygit/internal/adapters"
 	tea "github.com/charmbracelet/bubbletea"
+	utils "app.lazygit/internal/utils"
 )
 
 type ConnectionForm struct {
 	inputs     []textinput.Model
 	focusIndex int
+	layout utils.ConnectionManagerLayout
 }
 
-func InitConnForm(connection adapters.DbConnection) ConnectionForm {
+func InitConnForm(connection adapters.DbConnection, layout utils.ConnectionManagerLayout) ConnectionForm {
 	inputs := []textinput.Model{
 		createHostInput(connection.Host),
 		createPortInput(connection.Port),
 		createUserInput(connection.Username),
 		createPasswordInput(connection.Password),
 	}
-	return ConnectionForm{inputs: inputs[:], focusIndex: -1}
+	return ConnectionForm{inputs: inputs[:], focusIndex: -1, layout: layout}
 }
 
 func (m ConnectionForm) Init() tea.Cmd {
@@ -54,6 +55,8 @@ func (m ConnectionForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		cmds := m.changeFocusedInput()
 		return m, tea.Batch(cmds...)
+	case LayoutUpdated:
+		m.layout = utils.ConnectionManagerLayout(msg)
 	}
 	cmd := m.updateInputs(msg)
 	return m, cmd
