@@ -29,10 +29,10 @@ type ConnectionErrorMsg string
 type ConnectedMsg adapters.Database
 type LayoutUpdated utils.ConnectionManagerLayout
 
-func initializeNewConnection(host string) adapters.DbConnection {
+func initializeNewConnection(i int) adapters.DbConnection {
 	return adapters.DbConnection{
-		Name:     "New Connection",
-		Host:     host,
+		Name:     fmt.Sprintf("New Connection %d", i),
+		Host:     "localhost",
 		Port:     "5432",
 		Username: "postgres",
 		Password: "postgres",
@@ -52,7 +52,7 @@ func setLayout(width int, height int) tea.Cmd {
 func InitConnectionManager() ConnectionManager {
 	var connections  []adapters.DbConnection
 	for i := 0; i < 45; i++ {
-		connections = append(connections, initializeNewConnection(fmt.Sprintf("Host %s", i)))
+		connections = append(connections, initializeNewConnection(i))
     }
 	width, height, err := term.GetSize(int(os.Stdin.Fd()))
 	if err != nil {

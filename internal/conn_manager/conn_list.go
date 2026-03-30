@@ -86,6 +86,6 @@ func (m ConnectionList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ConnectionList) View() string {
-	info := fmt.Sprintf("Current rows: %s", m.viewport.VisibleLineCount())
+	info := fmt.Sprintf("Current rows: %d\nTotal rows: %d", m.viewport.VisibleLineCount(), m.viewport.TotalLineCount())
 	return fmt.Sprintf("%s\n%s", m.viewport.View(), info)
 }

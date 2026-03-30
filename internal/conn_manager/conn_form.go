@@ -74,9 +74,7 @@ func (m ConnectionForm) View() string {
 		result += "\n"
 	}
 	return lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, false, false, true).
-		Padding(0, 2).
-		Width(m.layout.ConnectionListWidth).Height(m.layout.BodyHeight).Render(result)
-
+		Width(m.layout.ConnectionListWidth + 6).Height(m.layout.BodyHeight).Render(result)
 }
 
 func (m ConnectionForm) changeFocusIndex(key string) int {
