@@ -50,44 +50,10 @@ func setLayout(width int, height int) tea.Cmd {
 }
 
 func InitConnectionManager() ConnectionManager {
-	connections := []adapters.DbConnection{
-		initializeNewConnection("localhost"),
-		initializeNewConnection("pocalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-		initializeNewConnection("totalhost"),
-	}
+	var connections  []adapters.DbConnection
+	for i := 0; i < 45; i++ {
+		connections = append(connections, initializeNewConnection(fmt.Sprintf("Host %s", i)))
+    }
 	width, height, err := term.GetSize(int(os.Stdin.Fd()))
 	if err != nil {
 		width = 1 
