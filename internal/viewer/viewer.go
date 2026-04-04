@@ -1,28 +1,24 @@
 package viewer
 
 import (
+	"github.com/charmbracelet/bubbles/table"
+	"github.com/charmbracelet/bubbles/viewport"
+
 	adapters "app.lazygit/internal/adapters"
 	utils "app.lazygit/internal/utils"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"strings"
 )
 
-var (
-	paddingStyle    = lipgloss.NewStyle().Padding(1)
-	selectedStyle   = lipgloss.NewStyle().Background(lipgloss.Color("57")).Foreground(lipgloss.Color("230"))
-	borderColor     = lipgloss.Color("240")
-	borderStyle     = lipgloss.NewStyle().Foreground(borderColor)
-)
 
 type ViewerModel struct {
 	database    adapters.Database
 	headers     []string
 	rows        [][]string
 	selectedRow int
+	viewport viewport.Model
 }
 
-func InitViewer(database adapters.Database) ViewerModel {
+func InitViewer(database adapters.Database, layout utils.ConnectionContainerLayout) ViewerModel {
 	return ViewerModel{database: database}
 }
 
@@ -52,6 +48,7 @@ func (m ViewerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func renderTable(headers []string, rows [][]string, selectedRow int) string {
+	// Calculate column widths: max of header length and widest cell per column
 	colWidths := make([]int, len(headers))
 	for i, h := range headers {
 		colWidths[i] = len(h)
@@ -63,60 +60,30 @@ func renderTable(headers []string, rows [][]string, selectedRow int) string {
 			}
 		}
 	}
-	for i := range colWidths {
-		colWidths[i] += 2 // 1 space padding each side
+
+	cols := make([]table.Column, len(headers))
+	for i, h := range headers {
+		cols[i] = table.Column{Title: h, Width: colWidths[i]}
 	}
 
-	sep := func(left, mid, join, right string) string {
-		var s strings.Builder
-		s.WriteString(borderStyle.Render(left))
-		for i, w := range colWidths {
-			s.WriteString(borderStyle.Render(strings.Repeat("─", w)))
-			if i < len(colWidths)-1 {
-				s.WriteString(borderStyle.Render(join))
-			}
-		}
-		s.WriteString(borderStyle.Render(right))
-		return s.String()
+	tableRows := make([]table.Row, len(rows))
+	for i, r := range rows {
+		tableRows[i] = table.Row(r)
 	}
 
-	renderRow := func(cells []string, selected bool) string {
-		var s strings.Builder
-		s.WriteString(borderStyle.Render("│"))
-		for i, w := range colWidths {
-			cell := ""
-			if i < len(cells) {
-				cell = cells[i]
-			}
-			content := " " + cell + strings.Repeat(" ", w-len(cell)-1)
-			if selected {
-				s.WriteString(selectedStyle.Render(content))
-			} else {
-				s.WriteString(content)
-			}
-			s.WriteString(borderStyle.Render("│"))
-		}
-		return s.String()
-	}
+	t := table.New(
+		table.WithColumns(cols),
+		table.WithRows(tableRows),
+		table.WithFocused(true),
+	)
+	t.SetCursor(selectedRow)
 
-	var sb strings.Builder
-	sb.WriteString(sep("┌", "─", "┬", "┐") + "\n")
-	sb.WriteString(renderRow(headers, false) + "\n")
-	sb.WriteString(sep("├", "─", "┼", "┤") + "\n")
-	for i, row := range rows {
-		sb.WriteString(renderRow(row, i == selectedRow) + "\n")
-		if i < len(rows)-1 {
-			sb.WriteString(sep("├", "─", "┼", "┤") + "\n")
-		}
-	}
-	sb.WriteString(sep("└", "─", "┴", "┘"))
-
-	return sb.String()
+	return t.View()
 }
 
 func (m ViewerModel) View() string {
 	if len(m.headers) > 0 {
-		return paddingStyle.Render(renderTable(m.headers, m.rows, m.selectedRow))
+		return renderTable(m.headers, m.rows, m.selectedRow)
 	}
 	return "Welcome to LazyGit Viewer!\n\nPress q to quit."
 }

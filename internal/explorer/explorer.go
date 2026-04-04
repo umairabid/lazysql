@@ -19,9 +19,10 @@ type ExplorerModel struct {
 	database      adapters.Database
 	databaseError string
 	explorerList  utils.ExplorerList
+	layout        utils.ConnectionContainerLayout
 }
 
-func InitExplorer(database adapters.Database) ExplorerModel {
+func InitExplorer(database adapters.Database, layout utils.ConnectionContainerLayout) ExplorerModel {
 	list := utils.ExplorerList{}
 	list.Initialize()
 	return ExplorerModel{

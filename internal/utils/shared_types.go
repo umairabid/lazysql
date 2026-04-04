@@ -13,3 +13,15 @@ type ConnectionManagerLayout struct {
 	ConnectionFormWidth int
 	FooterHeight        int
 }
+
+
+type ConnectionContainerLayout struct {
+	ScreenWidth  int
+	ScreenHeight int
+	EditorWidth   int
+	EditorHeight  int
+	ViewerWidth   int
+	ViewerHeight  int
+	ExplorerWidth int
+	ExplorerHeight int
+}

@@ -7,6 +7,7 @@ import (
 	adapters "app.lazygit/internal/adapters"
 	editor "app.lazygit/internal/editor"
 	explorer "app.lazygit/internal/explorer"
+	utils "app.lazygit/internal/utils"
 	viewer "app.lazygit/internal/viewer"
 	tea "github.com/charmbracelet/bubbletea"
 	lipgloss "github.com/charmbracelet/lipgloss"
@@ -19,10 +20,10 @@ type ConnectionContainerModel struct {
 	explorer    tea.Model
 	editor      tea.Model
 	viewer      tea.Model
-	width       int
-	height      int
 	active_view string
+	layout      utils.ConnectionContainerLayout
 }
+type LayoutUpdated utils.ConnectionContainerLayout
 
 func InitConnectionContainer(database adapters.Database) ConnectionContainerModel {
 	width, height, err := term.GetSize(int(os.Stdin.Fd()))
@@ -31,13 +32,19 @@ func InitConnectionContainer(database adapters.Database) ConnectionContainerMode
 		height = MIN_HEIGHT
 	}
 
+	layout := utils.CalculateConnectionContainerLayout(width, height)
 	return ConnectionContainerModel{
-		explorer:    explorer.InitExplorer(database),
-		editor:      editor.InitEditor(database),
-		viewer:      viewer.InitViewer(database),
-		width:       width,
-		height:      height,
+		explorer:    explorer.InitExplorer(database, layout),
+		editor:      editor.InitEditor(database, layout),
+		viewer:      viewer.InitViewer(database, layout),
 		active_view: "explorer",
+		layout:      layout,
+	}
+}
+
+func setLayout(width int, height int) tea.Cmd {
+	return func() tea.Msg {
+		return LayoutUpdated(utils.CalculateConnectionContainerLayout(width, height))
 	}
 }
 
@@ -50,20 +57,19 @@ func (m ConnectionContainerModel) Init() tea.Cmd {
 }
 
 func (m ConnectionContainerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var explorerCmd, editorCmd, viewerCmd tea.Cmd
+	var explorerCmd, editorCmd, viewerCmd, command tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		return m.handleKeyboardMsg(msg)
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
+		command = setLayout(msg.Width, msg.Height)
 	}
 
 	m.explorer, explorerCmd = m.explorer.Update(msg)
 	m.editor, editorCmd = m.editor.Update(msg)
 	m.viewer, viewerCmd = m.viewer.Update(msg)
 
-	return m, tea.Batch(explorerCmd, editorCmd, viewerCmd)
+	return m, tea.Batch(command, explorerCmd, editorCmd, viewerCmd)
 }
 
 func (m ConnectionContainerModel) handleKeyboardMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -89,7 +95,7 @@ func (m ConnectionContainerModel) handleKeyboardMsg(msg tea.KeyMsg) (tea.Model, 
 }
 
 func (m ConnectionContainerModel) View() string {
-	return lipgloss.JoinHorizontal(lipgloss.Top,
+	return lipgloss.JoinHorizontal(lipgloss.Top + 2,
 		m.explorerView(),
 		lipgloss.JoinVertical(lipgloss.Left,
 			m.editorView(),
@@ -99,12 +105,10 @@ func (m ConnectionContainerModel) View() string {
 }
 
 func (m ConnectionContainerModel) explorerView() string {
-	explorerWidth := (m.width / 3) - 8
-	explorerHeight := m.height - 8
 	style := lipgloss.
 		NewStyle().
-		Width(explorerWidth).
-		Height(explorerHeight).
+		Width(m.layout.ExplorerWidth - 6).
+		Height(m.layout.ExplorerHeight - 6).
 		Border(lipgloss.RoundedBorder()).
 		Margin(1, 0, 0, 1)
 
@@ -116,12 +120,10 @@ func (m ConnectionContainerModel) explorerView() string {
 }
 
 func (m ConnectionContainerModel) editorView() string {
-	editorWidth := m.width - (m.width / 3) + 3
-	editorHeight := (m.height / 2) - 10
 	style := lipgloss.
 		NewStyle().
-		Width(editorWidth).
-		Height(editorHeight).
+		Width(m.layout.EditorWidth).
+		Height(m.layout.EditorHeight - 4).
 		Border(lipgloss.RoundedBorder()).
 		Margin(1, 0, 0, 0)
 
@@ -132,12 +134,10 @@ func (m ConnectionContainerModel) editorView() string {
 }
 
 func (m ConnectionContainerModel) viewerView() string {
-	viewerWidth := m.width - (m.width / 3) + 3
-	viewerHeight := (m.height / 2)
 	style := lipgloss.
 		NewStyle().
-		Width(viewerWidth).
-		Height(viewerHeight).
+		Width(m.layout.ViewerWidth - 4).
+		Height(m.layout.ViewerHeight).
 		Border(lipgloss.RoundedBorder()).
 		Margin(0, 0, 1, 0)
 
