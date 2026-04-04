@@ -50,13 +50,13 @@ func setLayout(width int, height int) tea.Cmd {
 }
 
 func InitConnectionManager() ConnectionManager {
-	var connections  []adapters.DbConnection
+	var connections []adapters.DbConnection
 	for i := 0; i < 45; i++ {
 		connections = append(connections, initializeNewConnection(i))
-    }
+	}
 	width, height, err := term.GetSize(int(os.Stdin.Fd()))
 	if err != nil {
-		width = 1 
+		width = 1
 		height = 1
 	}
 	selectedConnection := connections[0]

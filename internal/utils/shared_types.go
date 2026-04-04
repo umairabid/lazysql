@@ -1,6 +1,7 @@
 package utils
 
 type ViewerTableData [][]string
+type ActiveViewChanged string
 
 type ConnectionManagerLayout struct {
 	ScreenWidth         int

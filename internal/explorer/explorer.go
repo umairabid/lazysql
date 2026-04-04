@@ -20,6 +20,7 @@ type ExplorerModel struct {
 	databaseError string
 	explorerList  utils.ExplorerList
 	layout        utils.ConnectionContainerLayout
+	isActive      bool
 }
 
 func InitExplorer(database adapters.Database, layout utils.ConnectionContainerLayout) ExplorerModel {
@@ -29,6 +30,8 @@ func InitExplorer(database adapters.Database, layout utils.ConnectionContainerLa
 		database:      database,
 		databaseError: "",
 		explorerList:  list,
+		layout:        layout,
+		isActive:      true,
 	}
 }
 
@@ -104,6 +107,8 @@ func (m ExplorerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			nodes = append(nodes, utils.ExplorerNode{Title: item, Type: "table_item"})
 		}
 		m.explorerList.Expand(nodes)
+	case utils.ActiveViewChanged:
+		m.isActive = string(msg) == "explorer"
 	}
 	return m, cmd
 }
@@ -131,7 +136,17 @@ func (m ExplorerModel) handleKeyboardActions(msg tea.Msg) (ExplorerModel, tea.Cm
 }
 
 func (m ExplorerModel) View() string {
-	return fmt.Sprintf("%s\n%s", m.ListNode(m.explorerList.Root, 0), m.databaseError)
+	style := lipgloss.
+		NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		Width(m.layout.ExplorerWidth - 2).
+		Height(m.layout.ExplorerHeight - 2)
+
+	if m.isActive {
+		style = style.BorderForeground(lipgloss.Color("205"))
+	}
+
+	return style.Render(fmt.Sprintf("%s\n%s", m.ListNode(m.explorerList.Root, 0), m.databaseError))
 }
 
 func (m ExplorerModel) ListNode(node *utils.ExplorerNode, indent int) string {
