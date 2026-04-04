@@ -40,6 +40,8 @@ func (m ViewerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case utils.ActiveViewChanged:
 		m.isActive = string(msg) == "viewer"
+	case utils.LayoutUpdated:
+		m.layout = utils.ConnectionContainerLayout(msg)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down":

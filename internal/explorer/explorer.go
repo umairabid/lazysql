@@ -109,6 +109,8 @@ func (m ExplorerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.explorerList.Expand(nodes)
 	case utils.ActiveViewChanged:
 		m.isActive = string(msg) == "explorer"
+	case utils.LayoutUpdated:
+		m.layout = utils.ConnectionContainerLayout(msg)
 	}
 	return m, cmd
 }

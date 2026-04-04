@@ -2,8 +2,8 @@ package conn_manager
 
 import (
 	"fmt"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/bubbles/viewport"
+	"github.com/charmbracelet/lipgloss"
 
 	adapters "app.lazygit/internal/adapters"
 	utils "app.lazygit/internal/utils"
@@ -17,10 +17,9 @@ type ConnectionList struct {
 	layout             utils.ConnectionManagerLayout
 }
 
-
 func InitConnectionList(connections []adapters.DbConnection, layout utils.ConnectionManagerLayout) ConnectionList {
 	viewport := viewport.New(layout.ConnectionListWidth, layout.BodyHeight)
-	model :=  ConnectionList{
+	model := ConnectionList{
 		connections:        connections,
 		selectedConnection: 0,
 		layout:             layout,

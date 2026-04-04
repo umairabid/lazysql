@@ -2,6 +2,7 @@ package utils
 
 type ViewerTableData [][]string
 type ActiveViewChanged string
+type LayoutUpdated ConnectionContainerLayout
 
 type ConnectionManagerLayout struct {
 	ScreenWidth         int
@@ -15,14 +16,13 @@ type ConnectionManagerLayout struct {
 	FooterHeight        int
 }
 
-
 type ConnectionContainerLayout struct {
-	ScreenWidth  int
-	ScreenHeight int
-	EditorWidth   int
-	EditorHeight  int
-	ViewerWidth   int
-	ViewerHeight  int
-	ExplorerWidth int
+	ScreenWidth    int
+	ScreenHeight   int
+	EditorWidth    int
+	EditorHeight   int
+	ViewerWidth    int
+	ViewerHeight   int
+	ExplorerWidth  int
 	ExplorerHeight int
 }

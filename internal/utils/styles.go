@@ -17,7 +17,6 @@ func TopBorder() lipgloss.Style {
 		Border(lipgloss.NormalBorder(), true, false, false, false)
 }
 
-
 func RightBorder() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), false, true, false, false)

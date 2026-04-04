@@ -1,9 +1,9 @@
 package client
 
 import (
+	adapters "app.lazygit/internal/adapters"
 	conn_manager "app.lazygit/internal/conn_manager"
 	tea "github.com/charmbracelet/bubbletea"
-	adapters "app.lazygit/internal/adapters"
 )
 
 type AppModel struct {

@@ -30,7 +30,6 @@ func (l *ExplorerList) Expand(children []ExplorerNode) {
 	l.Selected.Children = children
 	l.Selected.Expanded = true
 
-
 	for i := range l.Selected.Children {
 		child := &l.Selected.Children[i]
 		child.Parent = l.Selected

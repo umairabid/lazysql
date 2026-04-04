@@ -16,7 +16,6 @@ import (
 var MIN_WIDTH = 600
 var MIN_HEIGHT = 400
 
-type LayoutUpdated utils.ConnectionContainerLayout
 type ConnectionContainerModel struct {
 	explorer    tea.Model
 	editor      tea.Model
@@ -44,7 +43,7 @@ func InitConnectionContainer(database adapters.Database) ConnectionContainerMode
 
 func setLayout(width int, height int) tea.Cmd {
 	return func() tea.Msg {
-		return LayoutUpdated(utils.CalculateConnectionContainerLayout(width, height))
+		return utils.LayoutUpdated(utils.CalculateConnectionContainerLayout(width, height))
 	}
 }
 
@@ -78,7 +77,7 @@ func (m ConnectionContainerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleKeyboardMsg(msg)
 	case tea.WindowSizeMsg:
 		command = setLayout(msg.Width, msg.Height)
-	case LayoutUpdated:
+	case utils.LayoutUpdated:
 		m.layout = utils.ConnectionContainerLayout(msg)
 	case utils.ActiveViewChanged:
 		m.active_view = string(msg)

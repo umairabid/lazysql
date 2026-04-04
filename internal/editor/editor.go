@@ -30,6 +30,8 @@ func (m EditorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case utils.ActiveViewChanged:
 		m.isActive = string(msg) == "editor"
+	case utils.LayoutUpdated:
+		m.layout = utils.ConnectionContainerLayout(msg)
 	}
 	return m, cmd
 }
