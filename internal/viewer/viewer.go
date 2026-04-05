@@ -21,7 +21,7 @@ type ViewerModel struct {
 }
 
 func InitViewer(database adapters.Database, layout utils.ConnectionContainerLayout) ViewerModel {
-	viewport := viewport.New(layout.ViewerWidth, layout.ViewerHeight)
+	viewport := viewport.New(layout.ViewerWidth - 4, layout.ViewerHeight - 4)
 	return ViewerModel{
 		database: database,
 		layout:   layout,
