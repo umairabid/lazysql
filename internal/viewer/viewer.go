@@ -1,8 +1,7 @@
 package viewer
 
 import (
-	"github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/bubbles/viewport"
+	"fmt"
 
 	adapters "app.lazygit/internal/adapters"
 	utils "app.lazygit/internal/utils"
@@ -12,22 +11,23 @@ import (
 
 type ViewerModel struct {
 	database    adapters.Database
-	headers     []string
-	rows        [][]string
 	selectedRow int
-	viewport    viewport.Model
+	table	 utils.Table
 	layout      utils.ConnectionContainerLayout
 	isActive    bool
 }
 
 func InitViewer(database adapters.Database, layout utils.ConnectionContainerLayout) ViewerModel {
-	viewport := viewport.New(layout.ViewerWidth - 4, layout.ViewerHeight - 4)
 	return ViewerModel{
 		database: database,
 		layout:   layout,
 		isActive: false,
-		viewport: viewport,
+		table:    utils.InitTable([][]string{}, layout.ViewerWidth, layout.ViewerHeight),
 	}
+}
+
+func createTableFromData(data [][]string, layout utils.ConnectionContainerLayout) utils.Table {
+	return utils.InitTable(data, layout.ViewerWidth, layout.ViewerHeight)
 }
 
 func (m ViewerModel) Init() tea.Cmd { return nil }
@@ -36,65 +36,13 @@ func (m ViewerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var viewPortCmd tea.Cmd
 	switch msg := msg.(type) {
 	case utils.ViewerTableData:
-		if len(msg) > 0 {
-			m.headers = msg[0]
-			m.rows = msg[1:]
-			m.selectedRow = 0
-			m.viewport.SetContent(m.renderTable())
-		}
+		m.table = createTableFromData(msg, m.layout)
 	case utils.ActiveViewChanged:
 		m.isActive = string(msg) == "viewer"
 	case utils.LayoutUpdated:
 		m.layout = utils.ConnectionContainerLayout(msg)
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "j", "down":
-			if m.selectedRow < len(m.rows)-1 {
-				m.selectedRow++
-			}
-			m.viewport.SetContent(m.renderTable())
-		case "k", "up":
-			if m.selectedRow > 0 {
-				m.selectedRow--
-			}
-			m.viewport.SetContent(m.renderTable())
-		}
 	}
-	m.viewport, viewPortCmd = m.viewport.Update(msg)
 	return m, viewPortCmd
-}
-
-func (m ViewerModel) renderTable() string {
-	colWidths := make([]int, len(m.headers))
-	for i, h := range m.headers {
-		colWidths[i] = len(h)
-	}
-	for _, row := range m.rows {
-		for i, cell := range row {
-			if i < len(colWidths) && len(cell) > colWidths[i] {
-				colWidths[i] = len(cell)
-			}
-		}
-	}
-
-	cols := make([]table.Column, len(m.headers))
-	for i, h := range m.headers {
-		cols[i] = table.Column{Title: h, Width: colWidths[i]}
-	}
-
-	tableRows := make([]table.Row, len(m.rows))
-	for i, r := range m.rows {
-		tableRows[i] = table.Row(r)
-	}
-
-	t := table.New(
-		table.WithColumns(cols),
-		table.WithRows(tableRows),
-		table.WithFocused(true),
-	)
-	t.SetCursor(m.selectedRow)
-
-	return t.View()
 }
 
 func (m ViewerModel) View() string {
@@ -108,8 +56,8 @@ func (m ViewerModel) View() string {
 		style = style.BorderForeground(lipgloss.Color("205"))
 	}
 	var content string
-	if len(m.headers) > 0 {
-		content = m.viewport.View()
+	if m.table.HasData() {
+		content = fmt.Sprintf("%s\n", m.table.View())
 	} else {
 		content = "Welcome to LazyGit Viewer!\n\nPress q to quit."
 	}
