@@ -27,7 +27,7 @@ func InitViewer(database adapters.Database, layout utils.ConnectionContainerLayo
 }
 
 func createTableFromData(data [][]string, layout utils.ConnectionContainerLayout) utils.Table {
-	return utils.InitTable(data, layout.ViewerWidth, layout.ViewerHeight)
+	return utils.InitTable(data, layout.ViewerWidth - 2, layout.ViewerHeight - 2)
 }
 
 func (m ViewerModel) Init() tea.Cmd { return nil }

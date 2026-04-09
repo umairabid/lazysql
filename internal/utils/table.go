@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/charmbracelet/x/ansi"
 	viewport "github.com/charmbracelet/bubbles/viewport"
 	lipgloss "github.com/charmbracelet/lipgloss"
 )
@@ -17,6 +18,8 @@ type Table struct {
 	SelectedColumnStyle lipgloss.Style
 	SelectedCellStyle   lipgloss.Style
 	Viewport            viewport.Model
+
+	columnWidths []int
 }
 
 func InitTable(data [][]string, width int, height int) Table {
@@ -31,6 +34,8 @@ func InitTable(data [][]string, width int, height int) Table {
 		cols = []string{}
 	}
 
+	
+
 	return Table{
 		Columns:             cols,
 		Rows:                rows,
@@ -43,30 +48,33 @@ func InitTable(data [][]string, width int, height int) Table {
 		SelectedColumnStyle: lipgloss.NewStyle().Background(lipgloss.Color("57")).Foreground(lipgloss.Color("229")),
 		SelectedCellStyle:   lipgloss.NewStyle().Background(lipgloss.Color("57")).Foreground(lipgloss.Color("229")),
 		Viewport:            viewport,
+		columnWidths:        calculateColumnWidths(cols),
 	}
+}
+
+func calculateColumnWidths(columns []string) []int {
+	widths := make([]int, len(columns))
+	for i, col := range columns {
+		widths[i] = len(col) + 2
+	}
+	return widths
 }
 
 func (t Table) renderColumns() string {
 	var result string
-	for _, col := range t.Columns {
-		result += t.ColumnsStyle.Width(len(col)).Render(col) + " "
+	for i, col := range t.Columns {
+		result += t.ColumnsStyle.Padding(0, 1, 0, 1).Width(t.columnWidths[i]).Render(col)
 	}
 	return result
 }
 
 func (t Table) renderRows() string {
 	var result string
-	for i, row := range t.Rows {
+	for _, row := range t.Rows {
 		for j, cell := range row {
 			style := lipgloss.NewStyle()
-			if i == t.SelectedRow && j == t.SelectedColumn {
-				style = t.SelectedCellStyle
-			} else if i == t.SelectedRow {
-				style = t.SelectedRowStyle
-			} else if j == t.SelectedColumn {
-				style = t.SelectedColumnStyle
-			}
-			result += style.Render(cell) + " "
+			style = style.Width(t.columnWidths[j]).Padding(0, 1, 0, 1)
+			result += style.Render(ansi.Truncate(cell, t.columnWidths[j] - 2, "…"))
 		}
 		result += "\n"
 	}
