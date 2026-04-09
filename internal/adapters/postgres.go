@@ -73,7 +73,7 @@ func (p Postgres) GetTableItem(database string, table string, item string) ([][]
 	var err error
 	switch item {
 	case "data":
-		rows, err = p.execute(database, fmt.Sprintf("SELECT * FROM %s;", table))
+		rows, err = p.execute(database, fmt.Sprintf("SELECT * FROM %s LIMIT 100;", table))
 	case "schema":
 		rows, err = p.execute(database, "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = $1", table)
 	case "indexes":

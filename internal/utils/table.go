@@ -1,10 +1,25 @@
 package utils
 
 import (
-	"github.com/charmbracelet/x/ansi"
+	"slices"
+	"strings"
+
 	viewport "github.com/charmbracelet/bubbles/viewport"
 	lipgloss "github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 )
+
+// escapeCell replaces control characters that would break the table layout.
+func escapeCell(s string) string {
+	r := strings.NewReplacer(
+		"\n", "\\n",
+		"\r", "\\r",
+		"\t", "\\t",
+	)
+	return r.Replace(s)
+}
+
+var MIN_COLUMN_WIDTH = 100
 
 type Table struct {
 	Columns             []string
@@ -26,6 +41,7 @@ func InitTable(data [][]string, width int, height int) Table {
 	viewport := viewport.New(width, height)
 	var rows [][]string
 	var cols []string
+
 	if len(data) > 1 {
 		rows = data[1:]
 		cols = data[0]
@@ -33,8 +49,6 @@ func InitTable(data [][]string, width int, height int) Table {
 		rows = [][]string{}
 		cols = []string{}
 	}
-
-	
 
 	return Table{
 		Columns:             cols,
@@ -48,37 +62,46 @@ func InitTable(data [][]string, width int, height int) Table {
 		SelectedColumnStyle: lipgloss.NewStyle().Background(lipgloss.Color("57")).Foreground(lipgloss.Color("229")),
 		SelectedCellStyle:   lipgloss.NewStyle().Background(lipgloss.Color("57")).Foreground(lipgloss.Color("229")),
 		Viewport:            viewport,
-		columnWidths:        calculateColumnWidths(cols),
+		columnWidths:        calculateColumnWidths(cols, rows),
 	}
 }
 
-func calculateColumnWidths(columns []string) []int {
-	widths := make([]int, len(columns))
-	for i, col := range columns {
-		widths[i] = len(col) + 2
+func calculateColumnWidths(cols []string, rows [][]string) []int {
+	widths := make([]int, len(cols))
+	for i, col := range cols {
+		widths[i] = slices.Max([]int{widths[i], len(col) + 2})
+	}
+	for _, row := range rows {
+		for j, cell := range row {
+			widths[j] = slices.Min([]int{
+				MIN_COLUMN_WIDTH,
+				slices.Max([]int{widths[j], len(cell) + 2}),
+			})
+		}
 	}
 	return widths
 }
 
 func (t Table) renderColumns() string {
-	var result string
+	var columns []string
 	for i, col := range t.Columns {
-		result += t.ColumnsStyle.Padding(0, 1, 0, 1).Width(t.columnWidths[i]).Render(col)
+		columns = append(columns, t.ColumnsStyle.Padding(0, 1, 0, 1).Width(t.columnWidths[i]).Render(col))
 	}
-	return result
+	return lipgloss.JoinHorizontal(lipgloss.Left, columns...)
 }
 
 func (t Table) renderRows() string {
-	var result string
+	var rows []string
 	for _, row := range t.Rows {
+		var columns []string
 		for j, cell := range row {
 			style := lipgloss.NewStyle()
 			style = style.Width(t.columnWidths[j]).Padding(0, 1, 0, 1)
-			result += style.Render(ansi.Truncate(cell, t.columnWidths[j] - 2, "…"))
+			columns = append(columns, style.Render(ansi.Truncate(escapeCell(cell), t.columnWidths[j] - 2, "…")))
 		}
-		result += "\n"
+		rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Left, columns...))
 	}
-	return result
+	return lipgloss.JoinVertical(lipgloss.Left, rows...)
 }
 
 func (t Table) View() string {
