@@ -38,7 +38,7 @@ type Table struct {
 }
 
 func InitTable(data [][]string, width int, height int) Table {
-	viewport := viewport.New(width, height)
+	viewport := viewport.New(width-2, height-2)
 	var rows [][]string
 	var cols []string
 
@@ -85,19 +85,32 @@ func calculateColumnWidths(cols []string, rows [][]string) []int {
 func (t Table) renderColumns() string {
 	var columns []string
 	for i, col := range t.Columns {
-		columns = append(columns, t.ColumnsStyle.Padding(0, 1, 0, 1).Width(t.columnWidths[i]).Render(col))
+		style := t.ColumnsStyle.
+			Width(t.columnWidths[i]).
+			Padding(0, 1, 0, 1)
+
+		if i == t.SelectedColumn {
+			style = style.Inherit(t.SelectedColumnStyle)
+		}
+		columns = append(columns, style.Render(col))
 	}
 	return lipgloss.JoinHorizontal(lipgloss.Left, columns...)
 }
 
 func (t Table) renderRows() string {
 	var rows []string
-	for _, row := range t.Rows {
+	for i, row := range t.Rows {
 		var columns []string
 		for j, cell := range row {
-			style := lipgloss.NewStyle()
-			style = style.Width(t.columnWidths[j]).Padding(0, 1, 0, 1)
-			columns = append(columns, style.Render(ansi.Truncate(escapeCell(cell), t.columnWidths[j] - 2, "…")))
+			style := lipgloss.NewStyle().Width(t.columnWidths[j]).Padding(0, 1, 0, 1)
+			if i == t.SelectedRow && j == t.SelectedColumn {
+				style = style.Inherit(t.SelectedCellStyle)
+			} else if i == t.SelectedRow {
+				style = style.Inherit(t.SelectedRowStyle)
+			} else if j == t.SelectedColumn {
+				style = style.Inherit(t.SelectedColumnStyle)
+			}
+			columns = append(columns, style.Render(ansi.Truncate(escapeCell(cell), t.columnWidths[j]-2, "…")))
 		}
 		rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Left, columns...))
 	}
