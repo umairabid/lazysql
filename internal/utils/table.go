@@ -1,12 +1,13 @@
 package utils
 
 import (
+	"github.com/charmbracelet/x/ansi"
 	"slices"
 	"strings"
 
 	viewport "github.com/charmbracelet/bubbles/viewport"
+	tea "github.com/charmbracelet/bubbletea"
 	lipgloss "github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/x/ansi"
 )
 
 // escapeCell replaces control characters that would break the table layout.
@@ -50,7 +51,7 @@ func InitTable(data [][]string, width int, height int) Table {
 		cols = []string{}
 	}
 
-	return Table{
+	table := Table{
 		Columns:             cols,
 		Rows:                rows,
 		Width:               width,
@@ -64,6 +65,40 @@ func InitTable(data [][]string, width int, height int) Table {
 		Viewport:            viewport,
 		columnWidths:        calculateColumnWidths(cols, rows),
 	}
+	content := table.renderColumns() + "\n" + table.renderRows()
+	table.Viewport.SetContent(content)
+	return table
+}
+
+func (t Table) Update(msg tea.Msg) (Table, tea.Cmd) {
+	var viewportCmd tea.Cmd
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "l":
+			t.SelectedColumn = (t.SelectedColumn + 1) % len(t.Columns)
+			t.Viewport.ScrollRight(1)
+		case "h":
+			t.SelectedColumn = (t.SelectedColumn - 1 + len(t.Columns)) % len(t.Columns)
+			t.Viewport.ScrollLeft(1)
+		case "j":
+			t.SelectedRow = (t.SelectedRow + 1) % len(t.Rows)
+		case "k":
+			t.SelectedRow = (t.SelectedRow - 1 + len(t.Rows)) % len(t.Rows)
+		}
+	}
+	content := t.renderColumns() + "\n" + t.renderRows()
+	t.Viewport.SetContent(content)
+	t.Viewport, viewportCmd = t.Viewport.Update(msg)
+	return t, viewportCmd
+}
+
+func (t Table) View() string {
+	return t.Viewport.View()
+}
+
+func (t Table) HasData() bool {
+	return len(t.Columns) > 0 && len(t.Rows) > 0
 }
 
 func calculateColumnWidths(cols []string, rows [][]string) []int {
@@ -115,14 +150,4 @@ func (t Table) renderRows() string {
 		rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Left, columns...))
 	}
 	return lipgloss.JoinVertical(lipgloss.Left, rows...)
-}
-
-func (t Table) View() string {
-	content := t.renderColumns() + "\n" + t.renderRows()
-	t.Viewport.SetContent(content)
-	return t.Viewport.View()
-}
-
-func (t Table) HasData() bool {
-	return len(t.Columns) > 0 && len(t.Rows) > 0
 }

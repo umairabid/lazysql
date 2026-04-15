@@ -42,8 +42,10 @@ func (m ViewerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case utils.LayoutUpdated:
 		m.layout = utils.ConnectionContainerLayout(msg)
 	}
+	m.table, viewPortCmd = m.table.Update(msg)
 	return m, viewPortCmd
 }
+
 
 func (m ViewerModel) View() string {
 	style := lipgloss.
