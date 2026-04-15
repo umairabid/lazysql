@@ -76,15 +76,23 @@ func (t Table) Update(msg tea.Msg) (Table, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "l":
-			t.SelectedColumn = (t.SelectedColumn + 1) % len(t.Columns)
-			t.Viewport.ScrollRight(1)
+			if t.SelectedColumn < len(t.Columns)-1 {
+				t.Viewport.ScrollRight(t.selectedColumnWidth())
+				t.SelectedColumn++
+			}
 		case "h":
-			t.SelectedColumn = (t.SelectedColumn - 1 + len(t.Columns)) % len(t.Columns)
-			t.Viewport.ScrollLeft(1)
+			if t.SelectedColumn > 0 {
+				t.SelectedColumn--
+				t.Viewport.ScrollLeft(t.selectedColumnWidth())
+			}
 		case "j":
-			t.SelectedRow = (t.SelectedRow + 1) % len(t.Rows)
+			if t.SelectedRow < len(t.Rows)-1 {
+				t.SelectedRow++
+			}
 		case "k":
-			t.SelectedRow = (t.SelectedRow - 1 + len(t.Rows)) % len(t.Rows)
+			if t.SelectedRow > 0 {
+				t.SelectedRow--
+			}
 		}
 	}
 	content := t.renderColumns() + "\n" + t.renderRows()
@@ -150,4 +158,11 @@ func (t Table) renderRows() string {
 		rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Left, columns...))
 	}
 	return lipgloss.JoinVertical(lipgloss.Left, rows...)
+}
+
+func (t Table) selectedColumnWidth() int {
+	if len(t.columnWidths) == 0 {
+		return 0
+	}
+	return t.columnWidths[t.SelectedColumn]
 }
