@@ -40,7 +40,7 @@ func CalculateConnectionContainerLayout(width int, height int) ConnectionContain
 	viewerWidth := editorWidth
 
 	explorerHeight := height
-	editorHeight := height / 2
+	editorHeight := height / 3
 	viewerHeight := height - editorHeight
 
 	return ConnectionContainerLayout{

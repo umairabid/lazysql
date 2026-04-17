@@ -3,6 +3,7 @@ package explorer
 import (
 	"fmt"
 	"strings"
+	"github.com/charmbracelet/bubbles/viewport"
 
 	adapters "app.lazygit/internal/adapters"
 	utils "app.lazygit/internal/utils"
@@ -21,10 +22,12 @@ type ExplorerModel struct {
 	explorerList  utils.ExplorerList
 	layout        utils.ConnectionContainerLayout
 	isActive      bool
+	viewport	   viewport.Model
 }
 
 func InitExplorer(database adapters.Database, layout utils.ConnectionContainerLayout) ExplorerModel {
 	list := utils.ExplorerList{}
+	viewport := viewport.New(layout.ExplorerWidth-4, layout.ExplorerHeight-4)
 	list.Initialize()
 	return ExplorerModel{
 		database:      database,
@@ -32,6 +35,7 @@ func InitExplorer(database adapters.Database, layout utils.ConnectionContainerLa
 		explorerList:  list,
 		layout:        layout,
 		isActive:      true,
+		viewport:      viewport,
 	}
 }
 
@@ -86,6 +90,7 @@ func (m ExplorerModel) Init() tea.Cmd {
 
 func (m ExplorerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
+	var viewportCmd tea.Cmd
 	m, cmd = m.handleKeyboardActions(msg)
 	switch msg := msg.(type) {
 	case DatabaseError:
@@ -112,7 +117,9 @@ func (m ExplorerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case utils.LayoutUpdated:
 		m.layout = utils.ConnectionContainerLayout(msg)
 	}
-	return m, cmd
+	m.viewport.SetContent(m.ListNode(m.explorerList.Root, 0))
+	m.viewport, viewportCmd = m.viewport.Update(msg)
+	return m, tea.Batch(cmd, viewportCmd)
 }
 
 func (m ExplorerModel) handleKeyboardActions(msg tea.Msg) (ExplorerModel, tea.Cmd) {
@@ -129,8 +136,14 @@ func (m ExplorerModel) handleKeyboardActions(msg tea.Msg) (ExplorerModel, tea.Cm
 				m.explorerList.ContractParent()
 			}
 		case "j":
+			if m.explorerList.IsLastNodeSeleced() {
+				break
+			}
 			m.explorerList.MoveDown()
 		case "k":
+			if m.explorerList.IsFirstNodeSelected() {
+				break
+			}
 			m.explorerList.MoveUp()
 		}
 	}
@@ -148,7 +161,7 @@ func (m ExplorerModel) View() string {
 		style = style.BorderForeground(lipgloss.Color("205"))
 	}
 
-	return style.Render(fmt.Sprintf("%s\n%s", m.ListNode(m.explorerList.Root, 0), m.databaseError))
+	return style.Render(fmt.Sprintf("%s\n%s", m.viewport.View(), m.databaseError))
 }
 
 func (m ExplorerModel) ListNode(node *utils.ExplorerNode, indent int) string {

@@ -89,3 +89,11 @@ func (l *ExplorerList) MoveUp() {
 	}
 	l.Selected = previous
 }
+
+func (l *ExplorerList) IsFirstNodeSelected() bool {
+	return l.Selected.Previous.Type == "root"
+}
+
+func (l *ExplorerList) IsLastNodeSeleced() bool {
+	return l.Selected.Next.Type == "root"
+}
