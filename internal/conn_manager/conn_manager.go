@@ -20,6 +20,7 @@ type ConnectionManager struct {
 	selectedConnection int
 	editingConnection  bool
 	connecting         bool
+	savingConnection   bool
 	connectionError    string
 }
 
@@ -29,9 +30,9 @@ type ConnectionErrorMsg string
 type ConnectedMsg adapters.Database
 type LayoutUpdated utils.ConnectionManagerLayout
 
-func initializeNewConnection(i int) adapters.DbConnection {
+func initializeNewConnection() adapters.DbConnection {
 	return adapters.DbConnection{
-		Name:     fmt.Sprintf("New Connection %d", i),
+		Name:     "New Connection",
 		Host:     "localhost",
 		Port:     "5432",
 		Username: "postgres",
@@ -51,9 +52,7 @@ func setLayout(width int, height int) tea.Cmd {
 
 func InitConnectionManager() ConnectionManager {
 	var connections []adapters.DbConnection
-	for i := 0; i < 45; i++ {
-		connections = append(connections, initializeNewConnection(i))
-	}
+	connections = append(connections, initializeNewConnection())
 	width, height, err := term.GetSize(int(os.Stdin.Fd()))
 	if err != nil {
 		width = 1
@@ -96,12 +95,46 @@ func (m ConnectionManager) toggleConnectionEdit() tea.Cmd {
 	}
 }
 
+func (m ConnectionManager) saveConnection() tea.Cmd {
+	form := m.form.(ConnectionForm)
+	connection := adapters.DbConnection{
+		Name:     form.inputs[0].Value(),
+		Host:     form.inputs[1].Value(),
+		Port:     form.inputs[2].Value(),
+		Username: form.inputs[3].Value(),
+		Password: form.inputs[4].Value(),
+	}
+	return func() tea.Msg {
+		m.connections = append(m.connections, connection)
+		return SelectedConnectionMsg(connection)
+	}
+}
+
 func (m ConnectionManager) Init() tea.Cmd {
 	return tea.Batch(m.list.Init(), m.form.Init())
 }
 
 func (m ConnectionManager) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var listCmd, formCmd, command tea.Cmd
+	m, command = m.handleKeyboardActions(msg)
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		command = setLayout(msg.Width, msg.Height)
+	case ConnectionErrorMsg:
+		m.connectionError = string(msg)
+		m.connecting = false
+	case LayoutUpdated:
+		m.layout = utils.ConnectionManagerLayout(msg)
+	}
+
+	m.list, listCmd = m.list.Update(msg)
+	m.form, formCmd = m.form.Update(msg)
+	cmd := tea.Batch(listCmd, formCmd, command)
+	return m, cmd
+}
+
+func (m ConnectionManager) handleKeyboardActions(msg tea.Msg) (ConnectionManager, tea.Cmd) {
+	var command tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -118,24 +151,21 @@ func (m ConnectionManager) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.connectionError = ""
 				command = m.toggleConnectionEdit()
 			}
+		case "esc":
+			if m.editingConnection {
+				m.editingConnection = false
+				command = m.toggleConnectionEdit()
+			}
+		case "s":
+			m.savingConnection = true
+			command = m.saveConnection()
 		}
-	case tea.WindowSizeMsg:
-		command = setLayout(msg.Width, msg.Height)
-	case ConnectionErrorMsg:
-		m.connectionError = string(msg)
-		m.connecting = false
-	case LayoutUpdated:
-		m.layout = utils.ConnectionManagerLayout(msg)
 	}
 
-	m.list, listCmd = m.list.Update(msg)
-	m.form, formCmd = m.form.Update(msg)
-	cmd := tea.Batch(listCmd, formCmd, command)
-	return m, cmd
+	return m, command
 }
 
 func (m ConnectionManager) View() string {
-
 	header := lipgloss.NewStyle().Width(m.layout.WinWidth).Height(m.layout.HeaderHeight).Padding(1).Render("Connection Manager")
 	footer := m.buildFooter()
 
@@ -178,9 +208,10 @@ func editFooter() string {
 }
 
 func normalFooter() string {
-	return fmt.Sprintf("%s, %s, %s",
+	return fmt.Sprintf("%s, %s, %s, %s",
 		"Connect (enter)",
 		"Edit (e)",
+		"Save (s)",
 		"Navigate (j,k)",
 	)
 }

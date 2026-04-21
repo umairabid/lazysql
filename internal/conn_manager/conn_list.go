@@ -18,7 +18,7 @@ type ConnectionList struct {
 }
 
 func InitConnectionList(connections []adapters.DbConnection, layout utils.ConnectionManagerLayout) ConnectionList {
-	viewport := viewport.New(layout.ConnectionListWidth, layout.BodyHeight)
+	viewport := viewport.New(layout.ConnectionListWidth, layout.BodyHeight - 2)
 	model := ConnectionList{
 		connections:        connections,
 		selectedConnection: 0,
