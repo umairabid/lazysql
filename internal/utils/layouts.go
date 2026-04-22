@@ -4,8 +4,8 @@ import (
 	"slices"
 )
 
-var CONNECTION_MANAGER_MIN_WIDTH = 80
-var CONNECTION_MANAGER_MIN_HEIGHT = 24
+var CONNECTION_MANAGER_MIN_WIDTH = 84
+var CONNECTION_MANAGER_MIN_HEIGHT = 32
 var EXPLORER_MIN_WIDTH = 20
 
 func CalculateConnectionManagerLayout(width int, height int) ConnectionManagerLayout {
@@ -29,6 +29,8 @@ func CalculateConnectionManagerLayout(width int, height int) ConnectionManagerLa
 		ConnectionListWidth: listWidth,
 		ConnectionFormWidth: formWidth,
 		FooterHeight:        footerHeight,
+		HelpWidth:           winWidth / 2,
+		HelpHeight:          winHeight + 4,
 	}
 }
 

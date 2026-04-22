@@ -21,6 +21,7 @@ type ConnectionManager struct {
 	editingConnection  bool
 	connecting         bool
 	savingConnection   bool
+	showHelp           bool
 	connectionError    string
 }
 
@@ -155,10 +156,14 @@ func (m ConnectionManager) handleKeyboardActions(msg tea.Msg) (ConnectionManager
 			if m.editingConnection {
 				m.editingConnection = false
 				command = m.toggleConnectionEdit()
+			} else if m.showHelp {
+				m.showHelp = false
 			}
 		case "s":
 			m.savingConnection = true
 			command = m.saveConnection()
+		case "?":
+			m.showHelp = !m.showHelp
 		}
 	}
 
@@ -179,10 +184,32 @@ func (m ConnectionManager) View() string {
 		Render(listAndFormView)
 
 	container := utils.Border().Width(m.layout.WinWidth).Height(m.layout.WinHeight).Render(
-		fmt.Sprintf("%s\n%s\n%s", header, body, footer),
+		lipgloss.JoinVertical(lipgloss.Top, header, body, footer),
 	)
 
-	return lipgloss.Place(m.layout.ScreenWidth, m.layout.ScreenHeight, lipgloss.Center, lipgloss.Center, container)
+	base := lipgloss.Place(m.layout.ScreenWidth, m.layout.ScreenHeight, lipgloss.Center, lipgloss.Center, container)
+
+	if m.showHelp {
+		helpView := m.renderHelp()
+		return lipgloss.Place(m.layout.ScreenWidth, m.layout.ScreenHeight, lipgloss.Center, lipgloss.Center, helpView)
+	}
+
+	return base
+}
+
+func (m ConnectionManager) renderHelp() string {
+	helpText := `Connection Manager Help
+- Name is for connection name that will appear in the list
+- Driver is used to establish and find the database server, user
+ * pgx for PostgreSQL
+- Quit this dialog by hitting "?" or "esc"
+	`
+	return lipgloss.NewStyle().
+		Width(m.layout.HelpWidth).
+		Height(m.layout.HelpHeight).
+		Padding(1).
+		Border(lipgloss.NormalBorder()).
+		Render(helpText)
 }
 
 func (m ConnectionManager) buildFooter() string {
@@ -208,11 +235,12 @@ func editFooter() string {
 }
 
 func normalFooter() string {
-	return fmt.Sprintf("%s, %s, %s, %s",
+	return fmt.Sprintf("%s, %s, %s, %s, %s",
 		"Connect (enter)",
 		"Edit (e)",
 		"Save (s)",
 		"Navigate (j,k)",
+		"Help (?)",
 	)
 }
 

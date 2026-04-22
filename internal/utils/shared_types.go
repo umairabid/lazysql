@@ -14,6 +14,8 @@ type ConnectionManagerLayout struct {
 	ConnectionListWidth int
 	ConnectionFormWidth int
 	FooterHeight        int
+	HelpWidth           int
+	HelpHeight          int
 }
 
 type ConnectionContainerLayout struct {
