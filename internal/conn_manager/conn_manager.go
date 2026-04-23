@@ -75,10 +75,10 @@ func InitConnectionManager() ConnectionManager {
 func (m ConnectionManager) establishConnection() tea.Cmd {
 	form := m.form.(ConnectionForm)
 	connection := adapters.DbConnection{
-		Host:     form.inputs[0].Value(),
-		Port:     form.inputs[1].Value(),
-		Username: form.inputs[2].Value(),
-		Password: form.inputs[3].Value(),
+		Host:     form.inputs[2].Value(),
+		Port:     form.inputs[3].Value(),
+		Username: form.inputs[4].Value(),
+		Password: form.inputs[5].Value(),
 		Driver:   "pgx",
 	}
 	return func() tea.Msg {
@@ -161,7 +161,7 @@ func (m ConnectionManager) handleKeyboardActions(msg tea.Msg) (ConnectionManager
 			}
 		case "s":
 			m.savingConnection = true
-			command = m.saveConnection()
+			//command = m.saveConnection()
 		case "?":
 			m.showHelp = !m.showHelp
 		}
