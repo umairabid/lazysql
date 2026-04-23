@@ -11,6 +11,18 @@ func createTextInput(value string) textinput.Model {
 	return ti
 }
 
+func createNameInput(value string) textinput.Model {
+	ti := createTextInput(value)
+	ti.Placeholder = "Name"
+	return ti
+}
+
+func createDriverInput(value string) textinput.Model {
+	ti := createTextInput(value)
+	ti.Placeholder = "Driver"
+	return ti
+}
+
 func createHostInput(value string) textinput.Model {
 	ti := createTextInput(value)
 	ti.Placeholder = "Host"

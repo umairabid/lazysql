@@ -3,8 +3,9 @@ package conn_manager
 import (
 	adapters "app.lazygit/internal/adapters"
 	utils "app.lazygit/internal/utils"
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -16,6 +17,8 @@ type ConnectionForm struct {
 
 func InitConnForm(connection adapters.DbConnection, layout utils.ConnectionManagerLayout) ConnectionForm {
 	inputs := []textinput.Model{
+		createDriverInput(connection.Driver),
+		createNameInput(connection.Name),
 		createHostInput(connection.Host),
 		createPortInput(connection.Port),
 		createUserInput(connection.Username),
@@ -79,9 +82,9 @@ func (m ConnectionForm) View() string {
 
 func (m ConnectionForm) changeFocusIndex(key string) int {
 	if key == "tab" {
-		return (m.focusIndex + 1) % 4
+		return (m.focusIndex + 1) % len(m.inputs)
 	} else if key == "shift+tab" {
-		return (m.focusIndex - 1 + 4) % 4
+		return (m.focusIndex - 1 + len(m.inputs)) % len(m.inputs)
 	}
 	return m.focusIndex
 }

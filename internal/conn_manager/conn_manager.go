@@ -34,10 +34,10 @@ type LayoutUpdated utils.ConnectionManagerLayout
 func initializeNewConnection() adapters.DbConnection {
 	return adapters.DbConnection{
 		Name:     "New Connection",
-		Host:     "localhost",
-		Port:     "5432",
-		Username: "postgres",
-		Password: "postgres",
+		Host:     "",
+		Port:     "",
+		Username: "",
+		Password: "",
 	}
 }
 
