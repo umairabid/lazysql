@@ -38,6 +38,9 @@ func initializeNewConnection() adapters.DbConnection {
 		Port:     "",
 		Username: "",
 		Password: "",
+		Driver:  "",
+		Command:   "",
+		Url:       "",
 	}
 }
 
@@ -75,11 +78,15 @@ func InitConnectionManager() ConnectionManager {
 func (m ConnectionManager) establishConnection() tea.Cmd {
 	form := m.form.(ConnectionForm)
 	connection := adapters.DbConnection{
+		Driver:  form.inputs[0].Value(),
+		Name:    form.inputs[1].Value(),
 		Host:     form.inputs[2].Value(),
 		Port:     form.inputs[3].Value(),
 		Username: form.inputs[4].Value(),
 		Password: form.inputs[5].Value(),
-		Driver:   "pgx",
+		Url:		 form.inputs[6].Value(),
+		Command:   form.inputs[7].Value(),
+
 	}
 	return func() tea.Msg {
 		database, err := connection.InitConnection()

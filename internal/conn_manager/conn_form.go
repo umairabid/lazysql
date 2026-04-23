@@ -11,6 +11,7 @@ import (
 
 type ConnectionForm struct {
 	inputs     []textinput.Model
+	mode	 string
 	focusIndex int
 	layout     utils.ConnectionManagerLayout
 }
@@ -37,7 +38,6 @@ func (m ConnectionForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "tab", "shift+tab":
 			if m.focusIndex != -1 {
-
 				s := msg.String()
 				m.focusIndex = m.changeFocusIndex(s)
 				cmds := m.changeFocusedInput()

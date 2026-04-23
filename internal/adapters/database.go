@@ -14,6 +14,8 @@ type DbConnection struct {
 	Username string
 	Password string
 	Driver   string
+	Command  string
+	Url      string
 }
 
 type Database interface {

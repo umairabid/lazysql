@@ -41,6 +41,18 @@ func createUserInput(value string) textinput.Model {
 	return ti
 }
 
+func createUrlInput(value string) textinput.Model {
+	ti := createTextInput(value)
+	ti.Placeholder = "Connection URL"
+	return ti
+}
+
+func createCommandInput(value string) textinput.Model {
+	ti := createTextInput(value)
+	ti.Placeholder = "Custom Command"
+	return ti
+}
+
 func createPasswordInput(value string) textinput.Model {
 	ti := createTextInput(value)
 	ti.Placeholder = "Password"
@@ -48,3 +60,4 @@ func createPasswordInput(value string) textinput.Model {
 	ti.EchoCharacter = '•'
 	return ti
 }
+
