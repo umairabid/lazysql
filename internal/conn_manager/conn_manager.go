@@ -160,10 +160,14 @@ func (m ConnectionManager) handleKeyboardActions(msg tea.Msg) (ConnectionManager
 				m.showHelp = false
 			}
 		case "s":
-			m.savingConnection = true
-			//command = m.saveConnection()
+			if !m.editingConnection {
+				m.savingConnection = true
+				command = m.saveConnection()
+			}
 		case "?":
-			m.showHelp = !m.showHelp
+			if !m.editingConnection {
+				m.showHelp = !m.showHelp
+			}
 		}
 	}
 
@@ -227,8 +231,7 @@ func (m ConnectionManager) buildFooter() string {
 }
 
 func editFooter() string {
-	return fmt.Sprintf("%s, %s, %s",
-		"Save (enter)",
+	return fmt.Sprintf("%s, %s",
 		"Cancel (esc)",
 		"Navigate (tab, shift+tab)",
 	)
