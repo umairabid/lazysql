@@ -11,7 +11,7 @@ import (
 
 type ConnectionForm struct {
 	inputs     []textinput.Model
-	mode	 string
+	mode       string
 	focusIndex int
 	layout     utils.ConnectionManagerLayout
 }
@@ -24,8 +24,37 @@ func InitConnForm(connection adapters.DbConnection, layout utils.ConnectionManag
 		createPortInput(connection.Port),
 		createUserInput(connection.Username),
 		createPasswordInput(connection.Password),
+		createUrlInput(connection.Url),
+		createCommandInput(connection.Command),
 	}
-	return ConnectionForm{inputs: inputs[:], focusIndex: -1, layout: layout}
+	return ConnectionForm{
+		inputs:     inputs[:],
+		focusIndex: -1,
+		layout:     layout,
+		mode:       "url",
+	}
+}
+
+func (m ConnectionForm) changeFocusedInput() []tea.Cmd {
+	var cmds []tea.Cmd
+	for i := range m.inputs {
+		if i == m.focusIndex {
+			cmds = append(cmds, m.inputs[i].Focus())
+		} else {
+			m.inputs[i].Blur()
+		}
+	}
+	return cmds
+}
+
+func (m ConnectionForm) updateInputs(msg tea.Msg) tea.Cmd {
+	cmds := make([]tea.Cmd, len(m.inputs))
+
+	for i := range m.inputs {
+		m.inputs[i], cmds[i] = m.inputs[i].Update(msg)
+	}
+
+	return tea.Batch(cmds...)
 }
 
 func (m ConnectionForm) Init() tea.Cmd {
@@ -67,17 +96,44 @@ func (m ConnectionForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ConnectionForm) View() string {
-	var result string
-	for i, input := range m.inputs {
-		if i == m.focusIndex {
-			result += utils.FocusedTextInputStyle().Render(input.View())
-		} else {
-			result += utils.TextInputStyle().Render(input.View())
-		}
-		result += "\n"
+	result := m.renderConnectionInfoFields()
+	if m.mode == "credentials" {
+		result = append(result, m.renderCredentialsFields()...)
 	}
-	return lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, false, false, true).
-		Width(m.layout.ConnectionFormWidth).Height(m.layout.BodyHeight).Render(result)
+	if m.mode == "url" {
+		result = append(result, m.renderFieldsForIndexes([]int{6})...)
+	}
+	if m.mode == "command" {
+		result = append(result, m.renderFieldsForIndexes([]int{7})...)
+	}
+	return lipgloss.NewStyle().
+		Border(lipgloss.NormalBorder(), false, false, false, true).
+		Width(m.layout.ConnectionFormWidth).
+		Height(m.layout.BodyHeight).Render(lipgloss.JoinVertical(lipgloss.Left, result...))
+}
+
+func (m ConnectionForm) renderConnectionInfoFields() []string {
+	indexes := []int{0, 1}
+	return m.renderFieldsForIndexes(indexes)
+}
+
+func (m ConnectionForm) renderCredentialsFields() []string {
+	indexes := []int{2, 3, 4, 5}
+	return m.renderFieldsForIndexes(indexes)
+}
+
+func (m ConnectionForm) renderFieldsForIndexes(indexes []int) []string {
+	var result []string
+	for _, index := range indexes {
+		var inputView string
+		if index == m.focusIndex {
+			inputView = utils.FocusedTextInputStyle().Render(m.inputs[index].View())
+		} else {
+			inputView = utils.TextInputStyle().Render(m.inputs[index].View())
+		}
+		result = append(result, inputView)
+	}
+	return result
 }
 
 func (m ConnectionForm) changeFocusIndex(key string) int {
@@ -87,26 +143,4 @@ func (m ConnectionForm) changeFocusIndex(key string) int {
 		return (m.focusIndex - 1 + len(m.inputs)) % len(m.inputs)
 	}
 	return m.focusIndex
-}
-
-func (m ConnectionForm) changeFocusedInput() []tea.Cmd {
-	var cmds []tea.Cmd
-	for i := range m.inputs {
-		if i == m.focusIndex {
-			cmds = append(cmds, m.inputs[i].Focus())
-		} else {
-			m.inputs[i].Blur()
-		}
-	}
-	return cmds
-}
-
-func (m ConnectionForm) updateInputs(msg tea.Msg) tea.Cmd {
-	cmds := make([]tea.Cmd, len(m.inputs))
-
-	for i := range m.inputs {
-		m.inputs[i], cmds[i] = m.inputs[i].Update(msg)
-	}
-
-	return tea.Batch(cmds...)
 }
