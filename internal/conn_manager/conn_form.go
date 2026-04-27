@@ -72,13 +72,28 @@ func (m ConnectionForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds := m.changeFocusedInput()
 				return m, tea.Batch(cmds...)
 			}
+		case "m":
+			if m.focusIndex == -1 {
+				if m.mode == "credentials" {
+					m.mode = "command"
+				} else if m.mode == "command" {
+					m.mode = "url"
+				} else {
+					m.mode = "credentials"
+				}
+				return m, nil
+			}
 		}
 	case SelectedConnectionMsg:
 		conn := adapters.DbConnection(msg)
-		m.inputs[0].SetValue(conn.Host)
-		m.inputs[1].SetValue(conn.Port)
-		m.inputs[2].SetValue(conn.Username)
-		m.inputs[3].SetValue(conn.Password)
+		m.inputs[0].SetValue(conn.Driver)
+		m.inputs[1].SetValue(conn.Name)
+		m.inputs[2].SetValue(conn.Host)
+		m.inputs[3].SetValue(conn.Port)
+		m.inputs[4].SetValue(conn.Username)
+		m.inputs[5].SetValue(conn.Password)
+		m.inputs[6].SetValue(conn.Url)
+		m.inputs[7].SetValue(conn.Command)
 	case EditConnectionMsg:
 		canEdit := bool(msg)
 		if canEdit {
@@ -96,30 +111,25 @@ func (m ConnectionForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ConnectionForm) View() string {
-	result := m.renderConnectionInfoFields()
-	if m.mode == "credentials" {
-		result = append(result, m.renderCredentialsFields()...)
-	}
-	if m.mode == "url" {
-		result = append(result, m.renderFieldsForIndexes([]int{6})...)
-	}
-	if m.mode == "command" {
-		result = append(result, m.renderFieldsForIndexes([]int{7})...)
-	}
+	indices := m.getVisibleIndices()
+	result := m.renderFieldsForIndexes(indices)
+
 	return lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), false, false, false, true).
 		Width(m.layout.ConnectionFormWidth).
 		Height(m.layout.BodyHeight).Render(lipgloss.JoinVertical(lipgloss.Left, result...))
 }
 
-func (m ConnectionForm) renderConnectionInfoFields() []string {
-	indexes := []int{0, 1}
-	return m.renderFieldsForIndexes(indexes)
-}
-
-func (m ConnectionForm) renderCredentialsFields() []string {
-	indexes := []int{2, 3, 4, 5}
-	return m.renderFieldsForIndexes(indexes)
+func (m ConnectionForm) getVisibleIndices() []int {
+	indices := []int{0, 1}
+	if m.mode == "credentials" {
+		indices = append(indices, 2, 3, 4, 5)
+	} else if m.mode == "url" {
+		indices = append(indices, 6)
+	} else if m.mode == "command" {
+		indices = append(indices, 7)
+	}
+	return indices
 }
 
 func (m ConnectionForm) renderFieldsForIndexes(indexes []int) []string {
@@ -137,10 +147,29 @@ func (m ConnectionForm) renderFieldsForIndexes(indexes []int) []string {
 }
 
 func (m ConnectionForm) changeFocusIndex(key string) int {
+	visibleIndices := m.getVisibleIndices()
+	if len(visibleIndices) == 0 {
+		return -1
+	}
+
+	currentIndexInVisible := -1
+	for i, idx := range visibleIndices {
+		if idx == m.focusIndex {
+			currentIndexInVisible = i
+			break
+		}
+	}
+
 	if key == "tab" {
-		return (m.focusIndex + 1) % len(m.inputs)
+		if currentIndexInVisible == -1 {
+			return visibleIndices[0]
+		}
+		return visibleIndices[(currentIndexInVisible+1)%len(visibleIndices)]
 	} else if key == "shift+tab" {
-		return (m.focusIndex - 1 + len(m.inputs)) % len(m.inputs)
+		if currentIndexInVisible == -1 {
+			return visibleIndices[len(visibleIndices)-1]
+		}
+		return visibleIndices[(currentIndexInVisible-1+len(visibleIndices))%len(visibleIndices)]
 	}
 	return m.focusIndex
 }
